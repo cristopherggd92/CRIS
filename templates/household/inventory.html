@@ -1,0 +1,57 @@
+{% extends "household/_base.html" %}
+{% load icons money household %}
+{% block title %}Inventario · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "box" 26 %}</span>
+    <div><h1>Inventario y garantías</h1><p>{{ assets|length }} artículo{{ assets|length|pluralize }} · valor {{ total_value|money }} · {{ with_warranty }} con garantía</p></div>
+  </div>
+  <a href="{% url 'household:form_new' 'articulo' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Artículo</a>
+</div>
+
+{% if assets %}
+  <div class="hh-toolbar">
+    <div class="input-icon filters__search">
+      {% icon "search" 18 "input-icon__icon" %}
+      <input type="search" placeholder="Buscar por nombre, marca, serie o ubicación…" class="js-search" data-target="#asset-grid">
+    </div>
+    <div class="hf-chips js-filter" data-target="#asset-grid">
+      <button type="button" class="hf-chip is-on" data-filter="">Todo</button>
+      <button type="button" class="hf-chip" data-filter="active">{% icon "shield" 14 %} Con garantía</button>
+      <button type="button" class="hf-chip" data-filter="expiring">Por vencer</button>
+      <button type="button" class="hf-chip" data-filter="expired">Vencida</button>
+      {% for value, label in categories %}<button type="button" class="hf-chip" data-filter="{{ value }}">{{ label }}</button>{% endfor %}
+    </div>
+  </div>
+  <section class="asset-grid" id="asset-grid">
+    {% for a in assets %}
+      <a href="{% url 'household:form_edit' 'articulo' a.pk %}" class="asset asset--{{ a.warranty_state|default:'none' }}" data-drawer
+         data-tags="{{ a.category }} {{ a.warranty_state }}" data-amount="{{ a.price|default_if_none:'0'|stringformat:'s' }}">
+        <div class="asset__top">
+          <span class="asset__icon">{% icon a.icon 22 %}</span>
+          {% if a.warranty_state %}<span class="badge-state badge-state--{{ a.warranty_state }}">{% icon "shield" 12 %} {{ a.warranty_state|state_label }}</span>{% endif %}
+        </div>
+        <strong class="asset__name">{{ a.name }}</strong>
+        <small class="asset__meta">{{ a.brand|default:a.get_category_display }}{% if a.location %} · {{ a.location }}{% endif %}</small>
+        {% if a.serial %}<small class="asset__serial">S/N {{ a.serial }}</small>{% endif %}
+        <div class="asset__foot">
+          <span>{% if a.price %}{{ a.price|money }}{% endif %}</span>
+          {% if a.warranty_until %}<small>Garantía hasta {{ a.warranty_until|date:"d M Y" }}</small>{% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </section>
+  <p class="panel__empty js-no-results" hidden>Sin resultados.</p>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "box" 40 %}</span>
+    <h2>Tu inventario está vacío</h2>
+    <p>Guarda tus artículos importantes con número de serie, factura y fecha de garantía.</p>
+    <a href="{% url 'household:form_new' 'articulo' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Agregar artículo</a>
+  </div>
+{% endif %}
+{% endblock %}

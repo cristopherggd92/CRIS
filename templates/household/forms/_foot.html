@@ -1,0 +1,11 @@
+{% load icons %}
+<footer class="hf__foot">
+  {% if object %}
+    <button type="submit" class="btn-link hf__delete js-confirm" formaction="{% url 'household:delete' kind object.pk %}" formnovalidate>
+      {% icon "trash" 16 %} <span>Eliminar</span>
+    </button>
+  {% endif %}
+  <span class="hf__spacer"></span>
+  <button type="button" class="btn-secondary js-drawer-close">Cancelar</button>
+  <button type="submit" class="btn-primary js-save">{% icon "check" 18 %} {% if object %}Guardar cambios{% else %}Guardar{% endif %}</button>
+</footer>

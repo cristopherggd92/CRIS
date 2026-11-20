@@ -1,0 +1,47 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="mantenimiento" novalidate
+      data-chips='{"auto":["Cambio de aceite","Afinación","Llantas","Frenos","Batería","Alineación y balanceo","Lavado y encerado"],"plomeria":["Fuga","Destape","Calentador / boiler","Tinaco"],"electricidad":["Contactos","Iluminación","Centro de carga"],"electrodomestico":["Lavadora","Refrigerador","Minisplit","Estufa"],"jardin":["Poda","Pasto","Riego"],"pintura":["Pintura","Impermeabilización","Resanes"],"limpieza":["Fumigación","Limpieza profunda","Lavado de cisterna"],"otro":["Cerrajería","Herrería","Carpintería"]}'>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {{ vehicles_json|json_script:"hf-vehicles" }}
+  {% include "household/forms/_head.html" with icon="wrench" title="Registrar mantenimiento" subtitle="Del auto o de la casa, con su costo" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <h3><span>1</span> ¿Dónde?</h3>
+      {% include "household/forms/_tiles.html" with f=form.area group="area" extra="hf-tiles--sm" %}
+    </section>
+    <section class="hf-step">
+      <h3><span>2</span> ¿Qué se hizo?</h3>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.vehicle extra="span-2 js-car-only" %}
+        {% include "household/forms/_field.html" with f=form.title extra="span-2" %}
+      </div>
+      <div class="hf-chips js-title-chips"></div>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.date %}
+        <div class="hf-field hf-amount">
+          <label for="{{ form.cost.id_for_label }}">Costo</label>
+          <div class="hf-amount__wrap"><span>$</span>{{ form.cost }}</div>
+          {% for e in form.cost.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}
+        </div>
+        {% include "household/forms/_field.html" with f=form.km extra="js-car-only" %}
+        {% include "household/forms/_field.html" with f=form.provider %}
+      </div>
+    </section>
+    <section class="hf-step">
+      <h3><span>3</span> ¿Cuándo toca el siguiente? <small>(opcional)</small></h3>
+      <div class="hf-chips">
+        <button type="button" class="hf-chip js-car-only" data-add-km="5000">+5,000 km</button>
+        <button type="button" class="hf-chip js-car-only" data-add-km="10000">+10,000 km</button>
+        <button type="button" class="hf-chip" data-add-months="3">3 meses</button>
+        <button type="button" class="hf-chip" data-add-months="6">6 meses</button>
+        <button type="button" class="hf-chip" data-add-months="12">1 año</button>
+      </div>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.next_date %}
+        {% include "household/forms/_field.html" with f=form.next_km extra="js-car-only" %}
+      </div>
+      {% include "household/forms/_field.html" with f=form.notes %}
+    </section>
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

@@ -1,0 +1,18 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Eliminar · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" with current="Eliminar" %}
+
+<div class="form-card form-card--narrow center">
+  <span class="empty__icon empty__icon--danger">{% icon "trash" 36 %}</span>
+  <h1 class="h-md">¿Eliminar {{ what }}?</h1>
+  <p class="meta-muted">“{{ object }}” se borrará de forma permanente.</p>
+  <form method="post" class="form-actions center">
+    {% csrf_token %}
+    <a href="{{ cancel_url }}" class="btn-secondary">Cancelar</a>
+    <button type="submit" class="btn-danger">Sí, eliminar</button>
+  </form>
+</div>
+{% endblock %}

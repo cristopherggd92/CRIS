@@ -1,0 +1,43 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Terminar compra · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" with current="Terminar compra" %}
+
+<div class="form-card form-card--narrow">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% icon "check" 24 %}</span>
+    <div>
+      <h1>Terminar compra</h1>
+      <p>{{ list.name }}{% if list.store %} · {{ list.store }}{% endif %}</p>
+    </div>
+  </div>
+
+  <ul class="summary-list">
+    <li><span>En el carrito</span><strong>{{ summary.checked }} de {{ summary.count }}</strong></li>
+    <li><span>Total de lo marcado</span><strong>{{ summary.in_cart|money }}</strong></li>
+    {% if list.budget is not None %}<li><span>Presupuesto</span><strong>{{ list.budget|money }}</strong></li>{% endif %}
+  </ul>
+
+  <form method="post" novalidate class="form-grid form-grid--single">
+    {% csrf_token %}
+    <div class="field full">
+      <label for="{{ form.total_paid.id_for_label }}" class="field-label">{% icon "cash" 14 %} {{ form.total_paid.label }}</label>
+      {{ form.total_paid }}
+      <div class="field-help">{{ form.total_paid.help_text }}</div>
+      {% for e in form.total_paid.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+    </div>
+    {% if summary.pending %}
+      <div class="field full">
+        <label class="check">{{ form.carry_over }} <span>{{ form.carry_over.label }} ({{ summary.pending }})</span></label>
+      </div>
+    {% endif %}
+    <p class="field-help full">Los precios de lo que marcaste se guardan en tu catálogo para la próxima vez.</p>
+    <div class="form-actions full">
+      <a href="{% url 'shopping:detail' list.pk %}" class="btn-secondary">Seguir comprando</a>
+      <button type="submit" class="btn-primary">{% icon "check" 18 %} Terminar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

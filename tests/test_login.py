@@ -71,6 +71,27 @@ def test_logout_cierra_sesion(client, user):
 def test_menu_muestra_los_modulos(client, user):
     client.force_login(user)
     html = client.get(reverse("core:dashboard")).content.decode()
-    for nombre in ("Tareas", "Finanzas", "Notas", "Hábitos"):
+    for nombre in ("Tareas", "Finanzas", "Compras", "Hogar"):
         assert nombre in html
-    assert "Próximamente" in html
+    for retirado in ("Notas", "Hábitos"):
+        assert retirado not in html
+
+
+@pytest.mark.parametrize("typed", ["CRIS", "Cris", "cris"])
+def test_login_sin_importar_mayusculas(client, user, typed):
+    response = client.post(reverse("accounts:login"), {"username": typed, "password": PASSWORD})
+    assert response.status_code == 302
+    assert response.url == reverse("core:dashboard")
+
+
+def test_usuario_inexistente_sigue_fallando(client, user):
+    response = client.post(reverse("accounts:login"), {"username": "NADIE", "password": PASSWORD})
+    assert response.status_code == 200
+    assert "Usuario o contraseña incorrectos" in response.content.decode()
+
+
+def test_nombre_en_mayusculas_en_saludo_y_perfil(client, user):
+    client.force_login(user)
+    html = client.get(reverse("core:dashboard")).content.decode()
+    assert "Hola, CRIS" in html
+    assert '<span class="app-user__name">CRIS</span>' in html

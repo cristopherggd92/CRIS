@@ -1,0 +1,10 @@
+{% load icons %}
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+</div>
+{% with name=request.resolver_match.url_name %}
+<nav class="tabs" aria-label="Secciones de compras">
+  <a href="{% url 'shopping:home' %}" class="tab {% if name != 'products' and name != 'product_update' and name != 'product_delete' %}is-active{% endif %}">{% icon "cart" 16 %} Mis listas</a>
+  <a href="{% url 'shopping:products' %}" class="tab {% if 'product' in name %}is-active{% endif %}">{% icon "tag" 16 %} Productos</a>
+</nav>
+{% endwith %}

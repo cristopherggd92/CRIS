@@ -1,0 +1,6 @@
+{% load icons %}
+<div class="month-switch">
+  <a href="?mes={{ prev_month }}" class="icon-btn" aria-label="Mes anterior">{% icon "left" 18 %}</a>
+  <span class="month-switch__label">{{ month_label }}</span>
+  <a href="?mes={{ next_month }}" class="icon-btn" aria-label="Mes siguiente">{% icon "right" 18 %}</a>
+</div>

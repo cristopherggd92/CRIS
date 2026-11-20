@@ -1,0 +1,40 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="vehiculo" novalidate>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {% include "household/forms/_head.html" with icon="car" title="Nuevo vehículo" subtitle="Lleva su kilometraje, servicios y trámites" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <div class="hf-car-preview js-car-preview">
+        <span class="hf-car-preview__icon">{% icon "car" 34 %}</span>
+        <div><strong class="js-car-name">{{ form.name.value|default:"Mi vehículo" }}</strong><small class="js-car-desc">Marca · modelo · año</small></div>
+        <span class="hf-plate js-car-plate">{{ form.plate.value|default:"PLACAS" }}</span>
+      </div>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.name extra="span-2" %}
+        {% include "household/forms/_field.html" with f=form.brand %}
+        {% include "household/forms/_field.html" with f=form.model %}
+        {% include "household/forms/_field.html" with f=form.year %}
+        {% include "household/forms/_field.html" with f=form.plate %}
+        {% include "household/forms/_field.html" with f=form.km extra="span-2" %}
+      </div>
+      <div class="hf-field">
+        <span class="hf-label">Color en CRIS</span>
+        <div class="hf-swatches">
+          {% for opt in form.color %}<label class="hf-swatch hf-swatch--{{ opt.data.value }}" title="{{ opt.choice_label }}">{{ opt.tag }}</label>{% endfor %}
+        </div>
+      </div>
+    </section>
+    {% if not object %}
+      <section class="hf-step">
+        <h3><span>{% icon "bell" 14 %}</span> Recordatorios automáticos <small>(opcional)</small></h3>
+        <p class="hf-help">Si llenas una fecha, CRIS te avisará y la repetirá cada periodo.</p>
+        <div class="hf-grid">
+          {% include "household/forms/_field.html" with f=form.verification_date help="Se repite cada 6 meses" %}
+          {% include "household/forms/_field.html" with f=form.insurance_date help="Se repite cada año" %}
+          {% include "household/forms/_field.html" with f=form.tax_date help="Se repite cada año" %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

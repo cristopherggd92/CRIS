@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="greeting">
-  <h1>Hola, {{ user.first_name|default:user.username }} 👋</h1>
+  <h1>Hola, {{ user.first_name|default:user.username|upper }} 👋</h1>
   <p>¿Qué quieres organizar hoy?</p>
 </section>
 

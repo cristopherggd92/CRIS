@@ -1,0 +1,24 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="recibo" novalidate>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {{ services_json|json_script:"hf-services" }}
+  {% include "household/forms/_head.html" with icon="receipt" title="Registrar recibo" subtitle="Cuando llega el recibo, anótalo para no olvidar pagarlo" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.service extra="span-2" %}
+        <div class="hf-field span-2 hf-amount">
+          <label for="{{ form.amount.id_for_label }}">Monto <b>*</b></label>
+          <div class="hf-amount__wrap"><span>$</span>{{ form.amount }}</div>
+          {% for e in form.amount.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}
+        </div>
+        {% include "household/forms/_field.html" with f=form.due_date %}
+        {% include "household/forms/_field.html" with f=form.period %}
+        {% include "household/forms/_field.html" with f=form.reference extra="span-2" %}
+      </div>
+      <div class="hf-preview js-due-preview" hidden>{% icon "clock" 18 %} <span class="js-due-text"></span></div>
+      <label class="hf-switch">{{ form.paid }} <span class="hf-switch__track"></span> Ya lo pagué (se mueve el próximo vencimiento)</label>
+    </section>
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

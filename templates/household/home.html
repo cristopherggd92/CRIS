@@ -1,0 +1,81 @@
+{% extends "household/_base.html" %}
+{% load icons money %}
+{% block title %}Hogar · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "house" 26 %}</span>
+    <div>
+      <h1>Administración del hogar</h1>
+      <p>{{ counts.servicios }} servicio{{ counts.servicios|pluralize }} · {{ counts.vehiculos }} vehículo{{ counts.vehiculos|pluralize }} · {{ counts.articulos }} artículo{{ counts.articulos|pluralize }}</p>
+    </div>
+  </div>
+  {% include "household/_quick_add.html" %}
+</div>
+
+<section class="kpi-grid">
+  <div class="kpi {% if overdue %}kpi--alert{% endif %}">
+    <span class="kpi__label">{% icon "alert" 16 %} Vencidos</span>
+    <span class="kpi__value {% if overdue %}is-neg{% endif %}">{{ overdue }}</span>
+    <span class="kpi__hint">{% if overdue %}Atiéndelos primero{% else %}Todo al corriente{% endif %}</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "receipt" 16 %} Por pagar este mes</span>
+    <span class="kpi__value">{{ to_pay|money }}</span>
+    <span class="kpi__hint">Recibos y servicios</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "wrench" 16 %} Mantenimiento del año</span>
+    <span class="kpi__value">{{ year_maint|money }}</span>
+    <span class="kpi__hint">Auto y casa</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "shield" 16 %} Garantías vigentes</span>
+    <span class="kpi__value">{{ warranties }}</span>
+    <span class="kpi__hint"><a href="{% url 'household:inventory' %}" class="btn-link">Ver inventario</a></span>
+  </div>
+</section>
+
+<section class="panel-grid hh-grid">
+  <article class="panel">
+    <header class="panel__head"><h2>Próximos vencimientos</h2><span class="meta-muted">60 días</span></header>
+    {% if groups %}
+      {% for label, rows in groups %}
+        <h3 class="ag-group">{{ label }} <span class="pill">{{ rows|length }}</span></h3>
+        <ul class="ag-list">{% for e in rows %}{% include "household/_agenda_row.html" %}{% endfor %}</ul>
+      {% endfor %}
+    {% else %}
+      <div class="hh-empty">
+        <span class="empty__icon">{% icon "check" 36 %}</span>
+        <p>Nada pendiente en los próximos 60 días.<br>Agrega tus servicios y trámites para que CRIS te avise.</p>
+        <a href="{% url 'household:form_new' 'servicio' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Agregar servicio</a>
+      </div>
+    {% endif %}
+  </article>
+
+  <article class="panel">
+    <header class="panel__head"><h2>Gastos del hogar</h2><span class="meta-muted">{{ costs_total|money }} en 6 meses</span></header>
+    <div class="bars bars--stack" role="img" aria-label="Gastos por mes">
+      {% for m in costs %}
+        <div class="bars__col" title="{{ m.label }}: servicios {{ m.servicios|money }}, auto {{ m.auto|money }}, casa {{ m.casa|money }}">
+          <span class="bars__total">{% if m.total %}{{ m.total|floatformat:0 }}{% endif %}</span>
+          <div class="stack">
+            <span class="stack__seg stack__seg--casa" style="height: {{ m.casa_pct|stringformat:'s' }}%"></span>
+            <span class="stack__seg stack__seg--auto" style="height: {{ m.auto_pct|stringformat:'s' }}%"></span>
+            <span class="stack__seg stack__seg--serv" style="height: {{ m.servicios_pct|stringformat:'s' }}%"></span>
+          </div>
+          <span class="bars__label">{{ m.label }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="bars__legend">
+      <span><span class="dot dot--sky"></span> Servicios</span>
+      <span><span class="dot dot--indigo"></span> Auto</span>
+      <span><span class="dot dot--amber"></span> Casa</span>
+    </div>
+  </article>
+</section>
+{% endblock %}

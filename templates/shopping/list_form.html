@@ -1,0 +1,50 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}{% if object %}Editar lista{% else %}Nueva lista{% endif %} · CRIS{% endblock %}
+
+{% block content %}
+{% if object %}{% include "shopping/_nav.html" with current="Editar lista" %}{% else %}{% include "shopping/_nav.html" with current="Nueva lista" %}{% endif %}
+
+<div class="form-card">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% if object %}{% icon "edit" 24 %}{% else %}{% icon "cart" 24 %}{% endif %}</span>
+    <div>
+      <h1>{% if object %}Editar lista{% else %}Nueva lista de compras{% endif %}</h1>
+      <p>{% if object %}Creada el {{ object.created_at|date:"d M Y, H:i" }}{% else %}Después agregas los artículos{% endif %}</p>
+    </div>
+  </div>
+
+  <form method="post" novalidate class="form-grid">
+    {% csrf_token %}
+    <div class="field full">
+      <label for="{{ form.name.id_for_label }}" class="field-label">Nombre de la lista *</label>
+      {{ form.name }}
+      {% for e in form.name.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      <label for="{{ form.store.id_for_label }}" class="field-label">{% icon "store" 14 %} Tienda</label>
+      {{ form.store }}
+      <datalist id="stores">{% for s in stores %}<option value="{{ s }}">{% endfor %}</datalist>
+    </div>
+    <div class="field">
+      <label for="{{ form.planned_date.id_for_label }}" class="field-label">{% icon "calendar" 14 %} Fecha de compra</label>
+      {{ form.planned_date }}
+      {% for e in form.planned_date.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      <label for="{{ form.budget.id_for_label }}" class="field-label">{% icon "wallet" 14 %} Presupuesto</label>
+      {{ form.budget }}
+      <div class="field-help">Te avisamos si el estimado lo rebasa.</div>
+      {% for e in form.budget.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="field">
+      <label for="{{ form.notes.id_for_label }}" class="field-label">Notas</label>
+      {{ form.notes }}
+    </div>
+    <div class="form-actions full">
+      <a href="{% if object %}{% url 'shopping:detail' object.pk %}{% else %}{% url 'shopping:home' %}{% endif %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">{% if object %}Guardar cambios{% else %}Crear lista{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% load icons %}
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+</div>
+{% with name=request.resolver_match.url_name %}
+<nav class="tabs" aria-label="Secciones del hogar">
+  <a href="{% url 'household:home' %}" class="tab {% if name == 'home' %}is-active{% endif %}">{% icon "chart" 16 %} Resumen</a>
+  <a href="{% url 'household:services' %}" class="tab {% if name == 'services' %}is-active{% endif %}">{% icon "receipt" 16 %} Servicios</a>
+  <a href="{% url 'household:vehicles' %}" class="tab {% if name == 'vehicles' %}is-active{% endif %}">{% icon "car" 16 %} Vehículos</a>
+  <a href="{% url 'household:maintenance' %}" class="tab {% if name == 'maintenance' %}is-active{% endif %}">{% icon "wrench" 16 %} Mantenimiento</a>
+  <a href="{% url 'household:agenda' %}" class="tab {% if name == 'agenda' %}is-active{% endif %}">{% icon "bell" 16 %} Agenda</a>
+  <a href="{% url 'household:inventory' %}" class="tab {% if name == 'inventory' %}is-active{% endif %}">{% icon "box" 16 %} Inventario</a>
+</nav>
+{% endwith %}

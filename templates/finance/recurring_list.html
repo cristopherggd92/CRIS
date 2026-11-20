@@ -1,0 +1,50 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Recurrentes · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "repeat" 26 %}</span>
+    <div><h1>Recurrentes</h1><p>Renta, suscripciones, salario, pagos de tarjeta…</p></div>
+  </div>
+  <a href="{% url 'finance:recurring_create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva recurrente</a>
+</div>
+
+{% if recurrings %}
+  <ul class="tx-list">
+    {% for r in recurrings %}
+      <li class="tx tx--{{ r.kind }} {% if not r.is_active %}is-paused{% endif %}">
+        <span class="tx__icon">{% icon "repeat" 18 %}</span>
+        <div class="tx__body">
+          <div class="tx__title">{{ r.description }}{% if not r.is_active %} <span class="pill">Pausada</span>{% endif %}</div>
+          <div class="tx__meta">
+            {{ r.get_kind_display }} · {{ r.get_frequency_display }} ·
+            {% if r.kind == "transferencia" %}{{ r.account.name }} → {{ r.to_account.name }}{% else %}{{ r.account.name }}{% endif %}
+            {% if r.category %}· {{ r.category.name }}{% endif %}
+          </div>
+          <div class="tx__meta">{% icon "calendar" 12 %} Próximo: {{ r.next_date|date:"d M Y" }}{% if r.end_date %} · termina {{ r.end_date|date:"d M Y" }}{% endif %}</div>
+        </div>
+        <div class="tx__amount">{% if r.kind == "gasto" %}−{% elif r.kind == "ingreso" %}+{% endif %}{{ r.amount|money }}</div>
+        <div class="tx__actions">
+          <form method="post" action="{% url 'finance:recurring_toggle' r.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn" aria-label="{% if r.is_active %}Pausar{% else %}Reanudar{% endif %}">{% if r.is_active %}{% icon "pause" 16 %}{% else %}{% icon "play" 16 %}{% endif %}</button>
+          </form>
+          <a href="{% url 'finance:recurring_update' r.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 16 %}</a>
+          <a href="{% url 'finance:recurring_delete' r.pk %}" class="icon-btn icon-btn--danger" aria-label="Eliminar">{% icon "trash" 16 %}</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "repeat" 36 %}</span>
+    <h2>Sin recurrentes</h2>
+    <p>Programa tus pagos fijos y se registrarán solos en su fecha.</p>
+    <a href="{% url 'finance:recurring_create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva recurrente</a>
+  </div>
+{% endif %}
+{% endblock %}

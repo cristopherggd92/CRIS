@@ -1,0 +1,56 @@
+{% extends "household/_base.html" %}
+{% load icons money household %}
+{% block title %}Agenda · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "bell" 26 %}</span>
+    <div><h1>Fechas y verificaciones</h1><p>Lo que se repite se reprograma solo al marcarlo como hecho</p></div>
+  </div>
+  <a href="{% url 'household:form_new' 'recordatorio' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Recordatorio</a>
+</div>
+
+{% if pending %}
+  <ul class="ag-list">
+    {% for r in pending %}
+      <li class="ag ag--{{ r.due_state }}">
+        <span class="ag__icon">{% icon r.icon 20 %}</span>
+        <div class="ag__body">
+          <div class="ag__title">{{ r.title }}</div>
+          <div class="ag__meta">
+            <span class="ag__when">{{ r.due_date|date:"D d M Y" }} · {{ r.due_date|days_until }}</span>
+            {% if r.vehicle %}<span>{{ r.vehicle.name }}</span>{% endif %}
+            {% if r.repeat %}<span>{% icon "repeat" 12 %} {{ r.get_repeat_display|lower }}</span>{% endif %}
+          </div>
+        </div>
+        {% if r.amount %}<span class="ag__amount">{{ r.amount|money }}</span>{% endif %}
+        <div class="ag__actions">
+          <form method="post" action="{% url 'household:reminder_done' r.pk %}" class="js-quick">{% csrf_token %}<button type="submit" class="btn-ghost">{% icon "check" 16 %} Hecho</button></form>
+          <a href="{% url 'household:form_edit' 'recordatorio' r.pk %}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 16 %}</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "bell" 40 %}</span>
+    <h2>Sin fechas pendientes</h2>
+    <p>Agrega la verificación, el seguro, la licencia o cualquier trámite con fecha.</p>
+    <a href="{% url 'household:form_new' 'recordatorio' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Recordatorio</a>
+  </div>
+{% endif %}
+
+{% if done %}
+  <article class="panel mt-lg">
+    <header class="panel__head"><h2>Completados</h2></header>
+    <ul class="mini-list">
+      {% for r in done %}
+        <li><span class="acc-icon acc-icon--emerald">{% icon "check" 16 %}</span><span class="mini-list__name">{{ r.title }}<small>{{ r.done_at|date:"d M Y" }}</small></span></li>
+      {% endfor %}
+    </ul>
+  </article>
+{% endif %}
+{% endblock %}

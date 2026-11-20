@@ -1,0 +1,9 @@
+<div class="hf-field">
+  <span class="hf-label">{{ f.label|capfirst }}</span>
+  <div class="hf-seg" role="radiogroup" aria-label="{{ f.label }}">
+    {% for opt in f %}
+      <label class="hf-seg__opt" for="{{ opt.id_for_label }}">{{ opt.tag }}<span>{{ opt.choice_label }}</span></label>
+    {% endfor %}
+  </div>
+  {% for e in f.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}
+</div>

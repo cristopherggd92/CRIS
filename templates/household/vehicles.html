@@ -1,0 +1,87 @@
+{% extends "household/_base.html" %}
+{% load icons money household %}
+{% block title %}Vehículos · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "car" 26 %}</span>
+    <div><h1>Vehículos</h1><p>Kilometraje, servicios, verificaciones y seguros</p></div>
+  </div>
+  <a href="{% url 'household:form_new' 'vehiculo' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Vehículo</a>
+</div>
+
+{% for v in vehicles %}
+  <article class="car car--{{ v.color }}">
+    <header class="car__head">
+      <span class="car__icon">{% icon "car" 30 %}</span>
+      <div class="car__name">
+        <h2>{{ v.name }}</h2>
+        <p>{{ v.description|default:"Sin datos de modelo" }}</p>
+      </div>
+      {% if v.plate %}<span class="hf-plate">{{ v.plate }}</span>{% endif %}
+      <a href="{% url 'household:form_edit' 'vehiculo' v.pk %}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 18 %}</a>
+    </header>
+
+    <div class="car__stats">
+      <form method="post" action="{% url 'household:vehicle_km' v.pk %}" class="car__km js-km">
+        {% csrf_token %}
+        <label for="km-{{ v.pk }}">{% icon "gauge" 16 %} Kilometraje</label>
+        <div class="car__km-input"><input id="km-{{ v.pk }}" type="number" name="km" min="0" value="{{ v.km }}" inputmode="numeric"><span>km</span></div>
+      </form>
+      <div><span class="meta-muted">{% icon "wrench" 14 %} Gastado este año</span><strong>{{ v.year_cost|money }}</strong></div>
+    </div>
+
+    <div class="car__cols">
+      <section>
+        <h3>Próximo</h3>
+        {% if v.upcoming or v.pending %}
+          <ul class="car__list">
+            {% for r in v.upcoming %}
+              <li class="ag--{{ r.due_state }}">
+                <span class="badge-state badge-state--{{ r.due_state }}">{{ r.due_date|date:"d M" }}</span>
+                <span>{{ r.get_category_display }}</span>
+                <small>{{ r.due_date|days_until }}</small>
+              </li>
+            {% endfor %}
+            {% for m in v.pending %}
+              <li>
+                <span class="badge-state badge-state--{% if m.km_left is not None and m.km_left <= 0 %}overdue{% elif m.km_left is not None and m.km_left <= 1000 %}soon{% else %}ok{% endif %}">
+                  {% if m.next_km %}{{ m.next_km|km }}{% else %}{{ m.next_date|date:"d M" }}{% endif %}
+                </span>
+                <span>{{ m.title }}</span>
+                <small>{% if m.km_left is not None %}{% if m.km_left > 0 %}faltan {{ m.km_left|km }}{% else %}ya toca{% endif %}{% else %}{{ m.next_date|days_until }}{% endif %}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="panel__empty">Sin fechas próximas.</p>
+        {% endif %}
+        <a href="{% url 'household:form_new' 'recordatorio' %}?vehiculo={{ v.pk }}" class="btn-link" data-drawer>{% icon "plus" 14 %} Recordatorio</a>
+      </section>
+      <section>
+        <h3>Últimos servicios</h3>
+        {% if v.last_services %}
+          <ul class="car__list">
+            {% for m in v.last_services %}
+              <li><span class="badge-state badge-state--paid">{{ m.date|date:"d M y" }}</span><span>{{ m.title }}</span><small>{{ m.cost|money }}</small></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="panel__empty">Aún no registras servicios.</p>
+        {% endif %}
+        <a href="{% url 'household:form_new' 'mantenimiento' %}?vehiculo={{ v.pk }}" class="btn-link" data-drawer>{% icon "plus" 14 %} Servicio</a>
+      </section>
+    </div>
+  </article>
+{% empty %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "car" 40 %}</span>
+    <h2>Agrega tu vehículo</h2>
+    <p>Lleva el kilometraje y deja que CRIS te recuerde la verificación, el seguro y los servicios.</p>
+    <a href="{% url 'household:form_new' 'vehiculo' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Agregar vehículo</a>
+  </div>
+{% endfor %}
+{% endblock %}

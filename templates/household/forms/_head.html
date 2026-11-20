@@ -1,0 +1,9 @@
+{% load icons %}
+<header class="hf__head">
+  <span class="hf__icon">{% icon icon 24 %}</span>
+  <div>
+    <h2>{% if object %}Editar {{ label }}{% else %}{{ title }}{% endif %}</h2>
+    <p>{{ subtitle }}</p>
+  </div>
+  <button type="button" class="hf__close js-drawer-close" aria-label="Cerrar">✕</button>
+</header>

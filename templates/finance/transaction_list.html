@@ -1,0 +1,65 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Movimientos · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="page-head">
+  {% include "finance/_month_switch.html" %}
+  {% include "finance/_quick_actions.html" %}
+</div>
+
+<div class="kpi-grid kpi-grid--3">
+  <div class="kpi kpi--in"><span class="kpi__label">Ingresos</span><span class="kpi__value">{{ totals.income|money }}</span></div>
+  <div class="kpi kpi--out"><span class="kpi__label">Gastos</span><span class="kpi__value">{{ totals.expense|money }}</span></div>
+  <div class="kpi"><span class="kpi__label">Balance</span><span class="kpi__value {% if totals.net < 0 %}is-neg{% else %}is-pos{% endif %}">{{ totals.net|money:True }}</span></div>
+</div>
+
+<form method="get" class="filters" id="filters">
+  <input type="hidden" name="mes" value="{{ month_key }}">
+  <div class="input-icon filters__search">
+    {% icon "search" 18 "input-icon__icon" %}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Buscar descripción…">
+  </div>
+  <select name="tipo" class="select" aria-label="Tipo">
+    <option value="">Todo tipo</option>
+    {% for value, label in kinds %}<option value="{{ value }}" {% if filters.tipo == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="cuenta" class="select" aria-label="Cuenta">
+    <option value="">Toda cuenta</option>
+    {% for a in accounts %}<option value="{{ a.pk }}" {% if filters.cuenta == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.name }}</option>{% endfor %}
+  </select>
+  <select name="categoria" class="select" aria-label="Categoría">
+    <option value="">Toda categoría</option>
+    {% for c in categories %}<option value="{{ c.pk }}" {% if filters.categoria == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if transactions %}
+  <ul class="tx-list">
+    {% for tx in transactions %}{% include "finance/_tx_row.html" with show_actions=True %}{% endfor %}
+  </ul>
+  {% if is_paginated %}
+    <nav class="pager">
+      {% if page_obj.has_previous %}<a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}" class="btn-link">← Anterior</a>{% endif %}
+      <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?{{ querystring }}&page={{ page_obj.next_page_number }}" class="btn-link">Siguiente →</a>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "list" 36 %}</span>
+    <h2>Sin movimientos</h2>
+    <p>No hay movimientos en {{ month_label|lower }} con estos filtros.</p>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Aplica filtros al cambiar un select
+  const f = document.getElementById("filters");
+  f?.querySelectorAll("select").forEach((s) => s.addEventListener("change", () => f.submit()));
+</script>
+{% endblock %}

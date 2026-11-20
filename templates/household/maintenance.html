@@ -1,0 +1,60 @@
+{% extends "household/_base.html" %}
+{% load icons money household %}
+{% block title %}Mantenimiento · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "wrench" 26 %}</span>
+    <div><h1>Mantenimiento y gastos</h1><p>Total registrado: <strong class="js-filter-total">{{ total|money }}</strong></p></div>
+  </div>
+  <div class="quick-actions">
+    <a href="{% url 'household:form_new' 'mantenimiento' %}?area=plomeria" class="btn-secondary" data-drawer>{% icon "house" 18 %} De la casa</a>
+    <a href="{% url 'household:form_new' 'mantenimiento' %}" class="btn-primary" data-drawer>{% icon "car" 18 %} Del auto</a>
+  </div>
+</div>
+
+{% if records %}
+  <div class="hh-toolbar">
+    <div class="input-icon filters__search">
+      {% icon "search" 18 "input-icon__icon" %}
+      <input type="search" placeholder="Buscar…" class="js-search" data-target="#maint-list">
+    </div>
+    <div class="hf-chips js-filter" data-target="#maint-list">
+      <button type="button" class="hf-chip is-on" data-filter="">Todo</button>
+      <button type="button" class="hf-chip" data-filter="auto">{% icon "car" 14 %} Auto</button>
+      <button type="button" class="hf-chip" data-filter="casa">{% icon "house" 14 %} Casa</button>
+    </div>
+  </div>
+  <ul class="ag-list" id="maint-list">
+    {% for m in records %}
+      <li class="ag ag--paid" data-tags="{% if m.is_car %}auto{% else %}casa{% endif %} {{ m.area }}" data-amount="{{ m.cost|stringformat:'s' }}">
+        <span class="ag__icon">{% icon m.area|choice_icon:"area" 20 %}</span>
+        <div class="ag__body">
+          <div class="ag__title">{{ m.title }}</div>
+          <div class="ag__meta">
+            <span>{{ m.date|date:"d M Y" }}</span>
+            <span>{% if m.vehicle %}{{ m.vehicle.name }}{% else %}{{ m.get_area_display }}{% endif %}</span>
+            {% if m.km %}<span>{{ m.km|km }}</span>{% endif %}
+            {% if m.provider %}<span>{{ m.provider }}</span>{% endif %}
+          </div>
+        </div>
+        <span class="ag__amount">{{ m.cost|money }}</span>
+        <div class="ag__actions">
+          <a href="{% url 'household:form_edit' 'mantenimiento' m.pk %}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 16 %}</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+  <p class="panel__empty js-no-results" hidden>Sin resultados.</p>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "wrench" 40 %}</span>
+    <h2>Sin mantenimientos</h2>
+    <p>Registra cambios de aceite, reparaciones o fumigaciones y sabrás cuánto gastas.</p>
+    <a href="{% url 'household:form_new' 'mantenimiento' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Registrar</a>
+  </div>
+{% endif %}
+{% endblock %}

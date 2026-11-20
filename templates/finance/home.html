@@ -1,0 +1,134 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Finanzas · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="page-head">
+  {% include "finance/_month_switch.html" %}
+  {% include "finance/_quick_actions.html" %}
+</div>
+
+<section class="kpi-grid">
+  <div class="kpi">
+    <span class="kpi__label">{% icon "wallet" 16 %} Saldo total</span>
+    <span class="kpi__value">{{ total_balance|money }}</span>
+    <span class="kpi__hint">En {{ accounts|length }} cuenta{{ accounts|length|pluralize }}</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "check" 16 %} Disponible para gastar</span>
+    <span class="kpi__value {% if safe_to_spend < 0 %}is-neg{% endif %}">{{ safe_to_spend|money }}</span>
+    <span class="kpi__hint">Saldo menos {{ committed|money }} de pagos en 30 días</span>
+  </div>
+  <div class="kpi kpi--in">
+    <span class="kpi__label">{% icon "arrow_up" 16 %} Ingresos del mes</span>
+    <span class="kpi__value">{{ totals.income|money }}</span>
+  </div>
+  <div class="kpi kpi--out">
+    <span class="kpi__label">{% icon "arrow_down" 16 %} Gastos del mes</span>
+    <span class="kpi__value">{{ totals.expense|money }}</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "chart" 16 %} Balance del mes</span>
+    <span class="kpi__value {% if totals.net < 0 %}is-neg{% else %}is-pos{% endif %}">{{ totals.net|money:True }}</span>
+  </div>
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <header class="panel__head"><h2>Gastos por categoría</h2><span class="meta-muted">{{ month_label }}</span></header>
+    {% if categories %}
+      <div class="donut-wrap">
+        <div class="donut" style="background: conic-gradient({{ donut }});" role="img"
+             aria-label="Gráfica de gastos por categoría">
+          <div class="donut__center">
+            <span class="donut__total">{{ totals.expense|money }}</span>
+            <span class="meta-muted">gastado</span>
+          </div>
+        </div>
+        <ul class="legend">
+          {% for c in categories %}
+            <li>
+              <span class="dot dot--{{ c.color }}"></span>
+              <span class="legend__name">{{ c.name }}</span>
+              <span class="legend__pct">{{ c.percent }}%</span>
+              <span class="legend__amount">{{ c.total|money }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% else %}
+      <p class="panel__empty">Aún no hay gastos en {{ month_label|lower }}.</p>
+    {% endif %}
+  </article>
+
+  <article class="panel">
+    <header class="panel__head"><h2>Ingresos vs gastos</h2><span class="meta-muted">Últimos 6 meses</span></header>
+    <div class="bars" role="img" aria-label="Gráfica de ingresos y gastos por mes">
+      {% for m in months %}
+        <a href="?mes={{ m.key }}" class="bars__col {% if m.key == month_key %}is-current{% endif %}"
+           title="{{ m.label }}: ingresos {{ m.income|money }}, gastos {{ m.expense|money }}">
+          <div class="bars__pair">
+            <span class="bars__bar bars__bar--in" style="height: {{ m.income_pct|stringformat:'s' }}%"></span>
+            <span class="bars__bar bars__bar--out" style="height: {{ m.expense_pct|stringformat:'s' }}%"></span>
+          </div>
+          <span class="bars__label">{{ m.label }}</span>
+        </a>
+      {% endfor %}
+    </div>
+    <div class="bars__legend">
+      <span><span class="dot dot--emerald"></span> Ingresos</span>
+      <span><span class="dot dot--rose"></span> Gastos</span>
+    </div>
+  </article>
+</section>
+
+<section class="panel-grid panel-grid--3">
+  <article class="panel">
+    <header class="panel__head"><h2>Cuentas</h2><a href="{% url 'finance:accounts' %}" class="btn-link">Ver todas</a></header>
+    {% if accounts %}
+      <ul class="mini-list">
+        {% for acc in accounts %}
+          <li>
+            <span class="acc-icon acc-icon--{{ acc.color }}">{% icon acc.icon 16 %}</span>
+            <span class="mini-list__name">{{ acc.name }}<small>{{ acc.get_type_display }}</small></span>
+            <span class="mini-list__amount {% if acc.current < 0 %}is-neg{% endif %}">{{ acc.current|money }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="panel__empty">Primero crea una cuenta: efectivo, débito o tarjeta.</p>
+      <a href="{% url 'finance:account_create' %}" class="btn-primary">{% icon "plus" 16 %} Nueva cuenta</a>
+    {% endif %}
+  </article>
+
+  <article class="panel">
+    <header class="panel__head"><h2>Próximos pagos</h2><a href="{% url 'finance:recurring' %}" class="btn-link">Recurrentes</a></header>
+    {% if upcoming %}
+      <ul class="mini-list">
+        {% for r in upcoming %}
+          <li>
+            <span class="acc-icon">{% if r.kind == "transferencia" %}{% icon "swap" 16 %}{% else %}{% icon "calendar" 16 %}{% endif %}</span>
+            <span class="mini-list__name">{{ r.description }}<small>{{ r.next_date|date:"d M" }} · {{ r.account.name }}</small></span>
+            <span class="mini-list__amount">{{ r.amount|money }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="panel__empty">Sin pagos programados en los próximos 30 días.</p>
+    {% endif %}
+  </article>
+
+  <article class="panel">
+    <header class="panel__head"><h2>Últimos movimientos</h2><a href="{% url 'finance:transactions' %}" class="btn-link">Ver todos</a></header>
+    {% if recent %}
+      <ul class="tx-list tx-list--compact">
+        {% for tx in recent %}{% include "finance/_tx_row.html" %}{% endfor %}
+      </ul>
+    {% else %}
+      <p class="panel__empty">Aún no registras movimientos.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

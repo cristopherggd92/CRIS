@@ -1,0 +1,27 @@
+{% load icons money %}
+<li class="tx tx--{{ tx.kind }}">
+  <span class="tx__icon">
+    {% if tx.kind == "ingreso" %}{% icon "arrow_up" 18 %}{% elif tx.kind == "gasto" %}{% icon "arrow_down" 18 %}{% else %}{% icon "swap" 18 %}{% endif %}
+  </span>
+  <div class="tx__body">
+    {% if tx.description %}{% firstof tx.description as tx_title %}{% elif tx.category %}{% firstof tx.category.name as tx_title %}{% else %}{% firstof tx.get_kind_display as tx_title %}{% endif %}
+    <div class="tx__title" title="{{ tx_title }}">
+      {{ tx_title }}
+      {% if tx.recurring_id %}<span class="tx__badge" title="Generado por una recurrente">{% icon "repeat" 12 %}</span>{% endif %}
+    </div>
+    <div class="tx__meta">
+      {{ tx.date|date:"d M" }} ·
+      {% if tx.kind == "transferencia" %}{{ tx.account.name }} → {{ tx.to_account.name }}{% else %}{{ tx.account.name }}{% endif %}
+      {% if tx.category %}· <span class="tx__cat"><span class="dot dot--{{ tx.category.color }}"></span>{{ tx.category.name }}</span>{% endif %}
+    </div>
+  </div>
+  <div class="tx__amount">
+    {% if tx.kind == "transferencia" %}{{ tx.amount|money }}{% else %}{{ tx.signed_amount|money:True }}{% endif %}
+  </div>
+  {% if show_actions %}
+    <div class="tx__actions">
+      <a href="{% url 'finance:transaction_update' tx.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 16 %}</a>
+      <a href="{% url 'finance:transaction_delete' tx.pk %}" class="icon-btn icon-btn--danger" aria-label="Eliminar">{% icon "trash" 16 %}</a>
+    </div>
+  {% endif %}
+</li>

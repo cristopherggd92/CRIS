@@ -1,0 +1,31 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Editar artículo · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" with current="Editar artículo" %}
+
+<div class="form-card">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% icon "edit" 24 %}</span>
+    <div>
+      <h1>Editar artículo</h1>
+      <p>En «{{ object.shopping_list.name }}»</p>
+    </div>
+  </div>
+  <form method="post" novalidate class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field {% if field.name == 'name' or field.name == 'note' %}full{% endif %}">
+        <label for="{{ field.id_for_label }}" class="field-label">{{ field.label|capfirst }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <div class="form-actions full">
+      <a href="{% url 'shopping:detail' object.shopping_list_id %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

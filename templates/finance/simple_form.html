@@ -1,0 +1,33 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}{{ title }} · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="form-card form-card--narrow">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% icon icon 24 %}</span>
+    <div><h1>{{ title }}</h1></div>
+  </div>
+  <form method="post" novalidate class="form-grid form-grid--single">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field full">
+        {% if field.field.widget.input_type == "checkbox" %}
+          <label class="check">{{ field }} <span>{{ field.label|capfirst }}</span></label>
+        {% else %}
+          <label for="{{ field.id_for_label }}" class="field-label">{{ field.label|capfirst }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+        {% endif %}
+        {% if field.help_text %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <div class="form-actions full">
+      <a href="{{ view.success_url }}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

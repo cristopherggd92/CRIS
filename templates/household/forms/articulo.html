@@ -1,0 +1,50 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="articulo" novalidate>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {% include "household/forms/_head.html" with icon="box" title="Agregar al inventario" subtitle="Lo importante de tu casa, con su garantía" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <h3><span>1</span> Categoría</h3>
+      {% include "household/forms/_tiles.html" with f=form.category group="asset" extra="hf-tiles--sm" %}
+    </section>
+    <section class="hf-step">
+      <h3><span>2</span> Datos</h3>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.name extra="span-2" %}
+        {% include "household/forms/_field.html" with f=form.brand %}
+        {% include "household/forms/_field.html" with f=form.serial %}
+        {% include "household/forms/_field.html" with f=form.location %}
+        {% include "household/forms/_field.html" with f=form.store %}
+        <datalist id="locations">{% for l in locations %}<option value="{{ l }}">{% endfor %}<option value="Sala"><option value="Cocina"><option value="Recámara"><option value="Estudio"><option value="Cochera"></datalist>
+      </div>
+    </section>
+    <section class="hf-step">
+      <h3><span>3</span> Compra y garantía</h3>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.purchase_date %}
+        <div class="hf-field hf-amount">
+          <label for="{{ form.price.id_for_label }}">Precio</label>
+          <div class="hf-amount__wrap"><span>$</span>{{ form.price }}</div>
+        </div>
+      </div>
+      <div class="hf-field">
+        <label for="{{ form.warranty_months.id_for_label }}">Garantía (meses)</label>
+        <div class="hf-chips">
+          <button type="button" class="hf-chip" data-set="#id_warranty_months" data-value="0">Sin garantía</button>
+          <button type="button" class="hf-chip" data-set="#id_warranty_months" data-value="6">6 meses</button>
+          <button type="button" class="hf-chip" data-set="#id_warranty_months" data-value="12">1 año</button>
+          <button type="button" class="hf-chip" data-set="#id_warranty_months" data-value="24">2 años</button>
+          <button type="button" class="hf-chip" data-set="#id_warranty_months" data-value="36">3 años</button>
+        </div>
+        {{ form.warranty_months }}
+        {% for e in form.warranty_months.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}
+      </div>
+      <div class="hf-warranty js-warranty" hidden>
+        <div class="hf-warranty__top">{% icon "shield" 18 %} <span class="js-warranty-text"></span></div>
+        <div class="progress"><span class="js-warranty-bar"></span></div>
+      </div>
+      {% include "household/forms/_field.html" with f=form.notes %}
+    </section>
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

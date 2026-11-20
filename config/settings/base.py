@@ -21,6 +21,9 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.core",
     "apps.tasks",
+    "apps.finance",
+    "apps.shopping",
+    "apps.household",
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,82 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}{% if is_recurring %}Recurrente{% else %}Movimiento{% endif %} · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="form-card">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% if is_recurring %}{% icon "repeat" 24 %}{% elif object %}{% icon "edit" 24 %}{% else %}{% icon "plus" 24 %}{% endif %}</span>
+    <div>
+      <h1>{% if object %}Editar{% else %}Nuevo{% endif %} {% if is_recurring %}movimiento recurrente{% else %}movimiento{% endif %}</h1>
+      <p>{% if is_recurring %}Se registrará solo en cada fecha programada.{% else %}Registra un gasto, ingreso o transferencia.{% endif %}</p>
+    </div>
+  </div>
+
+  <form method="post" novalidate class="form-grid" id="tx-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert-error full">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+    <div class="field full">
+      <div class="seg" role="radiogroup" aria-label="Tipo">
+        {% for radio in form.kind %}
+          <label class="seg__opt seg__opt--{{ radio.data.value }}">
+            {{ radio.tag }}
+            <span>{% if radio.data.value == "gasto" %}{% icon "arrow_down" 16 %}{% elif radio.data.value == "ingreso" %}{% icon "arrow_up" 16 %}{% else %}{% icon "swap" 16 %}{% endif %} {{ radio.choice_label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% for field in form %}
+      {% if field.name != "kind" %}
+        <div class="field {% if field.name == 'description' %}full{% endif %} js-field-{{ field.name }} {% if field.field.widget.input_type == 'checkbox' %}field--check{% endif %}">
+          {% if field.field.widget.input_type == "checkbox" %}
+            <label class="check">{{ field }} <span>{{ field.label }}</span></label>
+          {% else %}
+            <label for="{{ field.id_for_label }}" class="field-label">{% if field.name == "to_account" %}Cuenta destino{% else %}{{ field.label|capfirst }}{% endif %}{% if field.field.required %} *{% endif %}</label>
+            {{ field }}
+          {% endif %}
+          {% if field.help_text %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
+          {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="form-actions full">
+      <a href="{% if is_recurring %}{% url 'finance:recurring' %}{% else %}{% url 'finance:transactions' %}{% endif %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{{ category_kinds|json_script:"category-kinds" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Muestra "cuenta destino" solo en transferencias y filtra categorías por tipo
+  (function () {
+    const form = document.getElementById("tx-form");
+    const kinds = JSON.parse(document.getElementById("category-kinds").textContent);
+    const category = form.querySelector("[name=category]");
+    const toField = form.querySelector(".js-field-to_account");
+    const catField = form.querySelector(".js-field-category");
+
+    function update() {
+      const kind = form.querySelector("[name=kind]:checked")?.value || "gasto";
+      const isTransfer = kind === "transferencia";
+      toField.hidden = !isTransfer;
+      catField.hidden = isTransfer;
+      [...category.options].forEach((opt) => {
+        if (!opt.value) return;
+        const ok = kinds[opt.value] === kind;
+        opt.hidden = !ok;
+        if (!ok && opt.selected) category.value = "";
+      });
+    }
+    form.querySelectorAll("[name=kind]").forEach((r) => r.addEventListener("change", update));
+    update();
+  })();
+</script>
+{% endblock %}

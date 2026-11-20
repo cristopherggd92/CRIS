@@ -1,0 +1,209 @@
+{% extends "layouts/app.html" %}
+{% load icons money static %}
+{% block title %}{{ list.name }} · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" with current=list.name %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "cart" 26 %}</span>
+    <div>
+      <h1>{{ list.name }}</h1>
+      <p class="shop-head__meta">
+        {% if list.store %}<span>{% icon "store" 14 %} {{ list.store }}</span>{% endif %}
+        {% if list.planned_date %}<span>{% icon "calendar" 14 %} {{ list.planned_date|date:"D d M Y" }}</span>{% endif %}
+        <span class="pill {% if list.is_done %}pill--done{% endif %}">{{ list.get_status_display }}</span>
+      </p>
+    </div>
+  </div>
+  <div class="quick-actions">
+    <a href="{% url 'shopping:update' list.pk %}" class="icon-btn" title="Editar lista" aria-label="Editar lista">{% icon "edit" 18 %}</a>
+    <form method="post" action="{% url 'shopping:duplicate' list.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="icon-btn" title="Repetir lista" aria-label="Repetir lista">{% icon "copy" 18 %}</button>
+    </form>
+    <a href="{% url 'shopping:delete' list.pk %}" class="icon-btn icon-btn--danger" title="Eliminar lista" aria-label="Eliminar lista">{% icon "trash" 18 %}</a>
+    {% if not list.is_done %}
+      <a href="{% url 'shopping:complete' list.pk %}" class="btn-primary">{% icon "check" 18 %} Terminar compra</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if list.is_done %}
+  <div class="done-banner">
+    <span class="acc-icon acc-icon--emerald">{% icon "check" 20 %}</span>
+    <div class="done-banner__text">
+      <strong>Compra terminada el {{ list.completed_at|date:"d M Y" }}</strong>
+      <span>Total pagado {{ list.total_paid|money }}</span>
+    </div>
+    <a href="{{ finance_url }}" class="btn-secondary">{% icon "wallet" 18 %} Registrar gasto en Finanzas</a>
+  </div>
+{% endif %}
+
+<section class="kpi-grid shop-kpis js-summary">
+  <div class="kpi">
+    <span class="kpi__label">{% icon "cart" 16 %} En el carrito</span>
+    <span class="kpi__value"><span class="js-checked">{{ summary.checked }}</span> / <span class="js-count">{{ summary.count }}</span></span>
+    <div class="progress"><span class="js-progress" style="width: {{ summary.progress }}%"></span></div>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "list" 16 %} Total estimado</span>
+    <span class="kpi__value js-estimated">{{ summary.estimated|money }}</span>
+    <span class="kpi__hint">{% if summary.without_price %}{{ summary.without_price }} sin precio{% else %}Todos con precio{% endif %}</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "cash" 16 %} Llevas en el carrito</span>
+    <span class="kpi__value js-in-cart">{{ summary.in_cart|money }}</span>
+  </div>
+  {% if list.budget is not None %}
+    <div class="kpi js-budget-kpi {% if summary.over_budget %}is-over{% endif %}">
+      <span class="kpi__label">{% icon "wallet" 16 %} Presupuesto {{ list.budget|money }}</span>
+      <span class="kpi__value js-budget-left {% if summary.over_budget %}is-neg{% else %}is-pos{% endif %}">{{ summary.budget_left|money }}</span>
+      <span class="kpi__hint js-budget-hint">{% if summary.over_budget %}Rebasas el presupuesto{% else %}Disponible según el estimado{% endif %}</span>
+    </div>
+  {% endif %}
+</section>
+
+<div class="shop-layout {% if list.is_done %}shop-layout--single{% endif %}">
+  <div class="shop-main">
+    {% if not list.is_done %}
+      <form method="post" action="{% url 'shopping:item_add' list.pk %}" class="panel quick-add" novalidate>
+        {% csrf_token %}
+        <div class="quick-add__grid">
+          <div class="field quick-add__name">
+            <label for="{{ form.name.id_for_label }}" class="field-label">Artículo *</label>
+            {{ form.name }}
+            {% for e in form.name.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.quantity.id_for_label }}" class="field-label">Cantidad</label>
+            {{ form.quantity }}
+            {% for e in form.quantity.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field">
+            <label for="{{ form.unit.id_for_label }}" class="field-label">Unidad</label>
+            {{ form.unit }}
+          </div>
+          <div class="field">
+            <label for="{{ form.aisle.id_for_label }}" class="field-label">Pasillo</label>
+            {{ form.aisle }}
+          </div>
+          <div class="field">
+            <label for="{{ form.price.id_for_label }}" class="field-label">Precio c/u</label>
+            {{ form.price }}
+            {% for e in form.price.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="field quick-add__note">
+            <label for="{{ form.note.id_for_label }}" class="field-label">Nota</label>
+            {{ form.note }}
+          </div>
+          <div class="quick-add__btn">
+            <button type="submit" class="btn-primary">{% icon "plus" 18 %} Agregar</button>
+          </div>
+        </div>
+        <span class="field-help js-hint" hidden></span>
+        <datalist id="products">{% for p in products %}<option value="{{ p.name }}">{% endfor %}</datalist>
+      </form>
+      {{ catalog|json_script:"catalog-data" }}
+    {% endif %}
+
+    {% if groups %}
+      <div class="shop-toolbar" {% if list.is_done %}hidden{% endif %}>
+        <label class="check"><input type="checkbox" class="js-hide-checked"> <span>Ocultar lo que ya está en el carrito</span></label>
+      </div>
+      {% for group in groups %}
+        <section class="aisle" id="aisle-{{ group.key }}">
+          <h2 class="aisle__title"><span class="dot dot--{{ group.items.0.aisle_color }}"></span>{{ group.label }} <span class="pill">{{ group.items|length }}</span></h2>
+          <ul class="item-list">
+            {% for item in group.items %}
+              <li class="item {% if item.is_checked %}is-checked{% endif %}" data-item="{{ item.pk }}">
+                <form method="post" action="{% url 'shopping:item_toggle' item.pk %}" class="item__check-form">
+                  {% csrf_token %}
+                  <button type="submit" class="task__check item__check js-item-toggle" {% if list.is_done %}disabled{% endif %}
+                          aria-label="{% if item.is_checked %}Sacar del carrito{% else %}Poner en el carrito{% endif %}">{% icon "check" 20 %}</button>
+                </form>
+                <div class="item__body">
+                  <div class="item__name">{{ item.name }}</div>
+                  <div class="item__meta">
+                    <span>{{ item.quantity|floatformat:"-2" }} {{ item.get_unit_display }}</span>
+                    {% if item.note %}<span>· {{ item.note }}</span>{% endif %}
+                    {% if item.product and item.product.price_trend %}
+                      <span class="trend trend--{{ item.product.price_trend }}" title="Antes {{ item.product.prev_price|money }}">
+                        {% if item.product.price_trend == "up" %}{% icon "arrow_up" 12 %}{% else %}{% icon "arrow_down" 12 %}{% endif %}{{ item.product.price_change_pct }}%
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+                {% if list.is_done %}
+                  <span class="item__price-ro">{% if item.price is not None %}{{ item.price|money }} c/u{% endif %}</span>
+                {% else %}
+                  <form method="post" action="{% url 'shopping:item_price' item.pk %}" class="item__price">
+                    {% csrf_token %}
+                    <span>$</span><input type="number" name="price" step="0.01" min="0" inputmode="decimal" class="js-price"
+                           value="{{ item.price|default_if_none:''|stringformat:'s' }}" placeholder="precio" aria-label="Precio unitario de {{ item.name }}">
+                  </form>
+                {% endif %}
+                <span class="item__subtotal js-subtotal">{% if item.subtotal is not None %}{{ item.subtotal|money }}{% endif %}</span>
+                {% if not list.is_done %}
+                  <div class="item__actions">
+                    <a href="{% url 'shopping:item_update' item.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 16 %}</a>
+                    <form method="post" action="{% url 'shopping:item_delete' item.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="icon-btn icon-btn--danger js-item-delete" aria-label="Eliminar">{% icon "trash" 16 %}</button>
+                    </form>
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <span class="empty__icon">{% icon "inbox" 40 %}</span>
+        <h2>Lista vacía</h2>
+        <p>Agrega tu primer artículo arriba o elige una sugerencia.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if not list.is_done %}
+    <aside class="shop-side">
+      <article class="panel">
+        <header class="panel__head"><h2>Sugerencias</h2><span class="meta-muted">Frecuentes</span></header>
+        {% if suggestions %}
+          <div class="chip-row">
+            {% for p in suggestions %}
+              <form method="post" action="{% url 'shopping:item_from_product' list.pk p.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="chip chip--{{ p.aisle_color }} suggest" title="{% if p.last_price is not None %}Último precio {{ p.last_price|money }}{% else %}Sin precio{% endif %}">
+                  {% if p.is_favorite %}{% icon "star" 12 %}{% else %}{% icon "plus" 12 %}{% endif %} {{ p.name }}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+          <form method="post" action="{% url 'shopping:favorites_to_list' list.pk %}" class="mt">
+            {% csrf_token %}
+            <button type="submit" class="btn-secondary btn-block">{% icon "star" 16 %} Agregar mis favoritos</button>
+          </form>
+        {% else %}
+          <p class="panel__empty">Aquí aparecerán los productos que compras seguido.</p>
+        {% endif %}
+      </article>
+      <article class="panel">
+        <header class="panel__head"><h2>Tips</h2></header>
+        <ul class="tips">
+          <li>Los artículos se acomodan por pasillo para que recorras la tienda en orden.</li>
+          <li>Escribe el precio real en el pasillo: los totales se actualizan al momento.</li>
+          <li>Al terminar, los precios se guardan y verás si algo subió {% icon "arrow_up" 12 %} o bajó {% icon "arrow_down" 12 %}.</li>
+        </ul>
+      </article>
+    </aside>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/shopping.js' %}"></script>
+{% endblock %}

@@ -1,20 +1,50 @@
 {% extends "base.html" %}
-{% load icons %}
+{% load icons static %}
 {% block body_class %}app-page{% endblock %}
 
 {% block body %}
 <header class="app-navbar">
   <div class="app-container app-navbar__inner">
-    <a class="app-brand" href="{% url 'core:dashboard' %}">CRIS</a>
+    <a class="app-brand" href="{% url 'core:dashboard' %}" aria-label="CRIS, ir al inicio">
+      <img src="{% static 'img/cris-logo.png' %}" alt="CRIS" class="app-brand__logo" width="116" height="36">
+    </a>
     <div class="app-navbar__right">
-      <span class="app-user">
-        <span class="app-user__avatar">{% icon "user" 18 %}</span>
-        <span class="app-user__name">{{ user }}</span>
-      </span>
-      <form method="post" action="{% url 'accounts:logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn-logout">{% icon "logout" 16 %} <span>Salir</span></button>
-      </form>
+      {% include "_theme_toggle.html" %}
+
+      {# Menú del usuario: <details> funciona aun sin JavaScript #}
+      <details class="user-menu js-user-menu">
+        <summary class="user-menu__trigger" aria-label="Menú de usuario">
+          <span class="app-user__avatar">{% icon "user" 18 %}</span>
+          <span class="app-user__name">{{ user.get_full_name|default:user.username|upper }}</span>
+          {% icon "chevron" 16 "user-menu__chevron" %}
+        </summary>
+
+        <div class="user-menu__panel" role="menu">
+          <div class="user-menu__header">
+            <span class="user-menu__avatar">{% icon "user" 22 %}</span>
+            <div>
+              <div class="user-menu__name">{{ user.get_full_name|default:user.username|upper }}</div>
+              <div class="user-menu__email">{{ user.email|default:"Sin correo registrado" }}</div>
+            </div>
+          </div>
+
+          <a href="{% url 'core:dashboard' %}" class="user-menu__item" role="menuitem">{% icon "home" 18 %} Inicio</a>
+          <a href="{% url 'accounts:password_change' %}" class="user-menu__item" role="menuitem">{% icon "lock" 18 %} Cambiar contraseña</a>
+          <a href="{% url 'finance:lock_setup' %}" class="user-menu__item" role="menuitem">{% icon "wallet" 18 %} Contraseña de Finanzas</a>
+          {% if user.is_staff %}
+            <a href="{% url 'admin:index' %}" class="user-menu__item" role="menuitem">{% icon "settings" 18 %} Administración</a>
+          {% endif %}
+          <span class="user-menu__item is-disabled" aria-disabled="true">{% icon "user" 18 %} Mi perfil <small>Próximamente</small></span>
+
+          <div class="user-menu__divider"></div>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="user-menu__item user-menu__item--danger" role="menuitem">
+              {% icon "logout" 18 %} Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </details>
     </div>
   </div>
 </header>
@@ -33,6 +63,20 @@
 <script>
   // Oculta los avisos después de unos segundos
   setTimeout(() => document.getElementById("toasts")?.remove(), 3500);
+
+  // Cierra el menú de usuario al hacer clic fuera o presionar Escape
+  (function () {
+    const menu = document.querySelector(".js-user-menu");
+    if (!menu) return;
+    document.addEventListener("click", (e) => {
+      if (menu.open && !menu.contains(e.target)) menu.open = false;
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menu.open) {
+        menu.open = false;
+        menu.querySelector("summary").focus();
+      }
+    });
+  })();
 </script>
-{% block scripts %}{% endblock %}
 {% endblock %}

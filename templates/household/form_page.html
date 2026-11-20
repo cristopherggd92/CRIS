@@ -1,0 +1,6 @@
+{% extends "household/_base.html" %}
+{% block title %}{{ label|capfirst }} · CRIS{% endblock %}
+{% block content %}
+{% include "household/_nav.html" %}
+<div class="hf-page">{% include form_template %}</div>
+{% endblock %}

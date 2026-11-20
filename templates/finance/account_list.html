@@ -1,0 +1,42 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Cuentas · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "wallet" 26 %}</span>
+    <div><h1>Cuentas</h1><p>Saldo total: <strong>{{ total_balance|money }}</strong></p></div>
+  </div>
+  <a href="{% url 'finance:account_create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva cuenta</a>
+</div>
+
+{% if accounts %}
+  <div class="acc-grid">
+    {% for acc in accounts %}
+      <article class="acc-card acc-card--{{ acc.color }} {% if acc.is_archived %}is-archived{% endif %}">
+        <div class="acc-card__top">
+          <span class="acc-icon acc-icon--{{ acc.color }}">{% icon acc.icon 20 %}</span>
+          <div class="acc-card__actions">
+            <a href="{% url 'finance:transactions' %}?cuenta={{ acc.pk }}" class="icon-btn" aria-label="Ver movimientos">{% icon "list" 16 %}</a>
+            <a href="{% url 'finance:account_update' acc.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 16 %}</a>
+            <a href="{% url 'finance:account_delete' acc.pk %}" class="icon-btn icon-btn--danger" aria-label="Eliminar">{% icon "trash" 16 %}</a>
+          </div>
+        </div>
+        <div class="acc-card__name">{{ acc.name }}</div>
+        <div class="meta-muted">{{ acc.get_type_display }}{% if acc.is_archived %} · Archivada{% endif %}</div>
+        <div class="acc-card__balance {% if acc.current < 0 %}is-neg{% endif %}">{{ acc.current|money }}</div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "wallet" 36 %}</span>
+    <h2>Aún no tienes cuentas</h2>
+    <p>Agrega tu efectivo, cuentas de débito, ahorro o tarjetas de crédito.</p>
+    <a href="{% url 'finance:account_create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva cuenta</a>
+  </div>
+{% endif %}
+{% endblock %}

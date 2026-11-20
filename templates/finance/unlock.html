@@ -1,0 +1,57 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Finanzas bloqueado · CRIS{% endblock %}
+
+{% block content %}
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+</div>
+
+<div class="form-card form-card--narrow lock-card">
+  <span class="lock-card__icon">{% icon "lock" 30 %}</span>
+  <h1 class="lock-card__title">Finanzas está bloqueado</h1>
+  <p class="lock-card__text">Escribe tu contraseña de Finanzas para continuar.</p>
+
+  {% if cooldown %}
+    <div class="alert-error">Demasiados intentos fallidos. Intenta de nuevo en {{ cooldown }} min.</div>
+  {% endif %}
+
+  <form method="post" novalidate class="form-grid form-grid--single">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% for field in form %}
+      <div class="field full">
+        <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>
+        <div class="input-icon">
+          <span class="input-icon__icon">{% icon "lock" 18 %}</span>
+          {{ field }}
+          <button type="button" class="input-icon__toggle js-toggle-pwd" aria-label="Mostrar u ocultar contraseña">{% icon "eye" 18 %}</button>
+        </div>
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <div class="full">
+      <button type="submit" class="btn-primary btn-block" {% if cooldown %}disabled{% endif %}>
+        {% icon "lock" 18 %} Desbloquear
+      </button>
+    </div>
+  </form>
+
+  <p class="lock-card__foot">
+    Se volverá a bloquear tras {{ minutes }} min sin actividad.<br>
+    ¿La olvidaste? <a href="{% url 'finance:lock_setup' %}?next={{ next|urlencode }}">Restablécela con la contraseña de tu cuenta</a>.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".js-toggle-pwd").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = btn.parentElement.querySelector("input");
+      input.type = input.type === "password" ? "text" : "password";
+      input.focus();
+    });
+  });
+</script>
+{% endblock %}

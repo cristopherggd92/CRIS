@@ -1,0 +1,33 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="recordatorio" novalidate>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {% include "household/forms/_head.html" with icon="bell" title="Nuevo recordatorio" subtitle="Verificaciones, seguros, licencias y trámites con fecha" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <h3><span>1</span> Tipo</h3>
+      {% include "household/forms/_tiles.html" with f=form.category group="reminder" autofill="#id_title" extra="hf-tiles--sm" %}
+    </section>
+    <section class="hf-step">
+      <h3><span>2</span> Detalle</h3>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.title extra="span-2" %}
+        {% include "household/forms/_field.html" with f=form.vehicle %}
+        {% include "household/forms/_field.html" with f=form.amount %}
+      </div>
+    </section>
+    <section class="hf-step">
+      <h3><span>3</span> Fecha</h3>
+      <div class="hf-chips">
+        <button type="button" class="hf-chip" data-from-today="1" data-target="#id_due_date">En 1 mes</button>
+        <button type="button" class="hf-chip" data-from-today="3" data-target="#id_due_date">En 3 meses</button>
+        <button type="button" class="hf-chip" data-from-today="6" data-target="#id_due_date">En 6 meses</button>
+        <button type="button" class="hf-chip" data-from-today="12" data-target="#id_due_date">En 1 año</button>
+      </div>
+      {% include "household/forms/_field.html" with f=form.due_date %}
+      <div class="hf-preview js-due-preview" hidden>{% icon "clock" 18 %} <span class="js-due-text"></span></div>
+      {% include "household/forms/_seg.html" with f=form.repeat %}
+      {% include "household/forms/_field.html" with f=form.notes %}
+    </section>
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

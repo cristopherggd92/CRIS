@@ -1,0 +1,18 @@
+{% load icons %}
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+  <form method="post" action="{% url 'finance:lock' %}" class="page-top__end">
+    {% csrf_token %}
+    <button type="submit" class="btn-lock" title="Bloquear Finanzas ahora">{% icon "lock" 16 %} Bloquear</button>
+  </form>
+</div>
+{% with name=request.resolver_match.url_name %}
+<nav class="tabs" aria-label="Secciones de finanzas">
+  <a href="{% url 'finance:home' %}" class="tab {% if name == 'home' %}is-active{% endif %}">{% icon "chart" 16 %} Resumen</a>
+  <a href="{% url 'finance:transactions' %}" class="tab {% if 'transaction' in name %}is-active{% endif %}">{% icon "list" 16 %} Movimientos</a>
+  <a href="{% url 'finance:accounts' %}" class="tab {% if 'account' in name %}is-active{% endif %}">{% icon "wallet" 16 %} Cuentas</a>
+  <a href="{% url 'finance:recurring' %}" class="tab {% if 'recurring' in name %}is-active{% endif %}">{% icon "repeat" 16 %} Recurrentes</a>
+  <a href="{% url 'finance:categories' %}" class="tab {% if 'categor' in name %}is-active{% endif %}">{% icon "tag" 16 %} Categorías</a>
+  <a href="{% url 'finance:import' %}" class="tab {% if name == 'import' %}is-active{% endif %}">{% icon "upload" 16 %} Importar</a>
+</nav>
+{% endwith %}

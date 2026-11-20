@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Contraseña de Finanzas · CRIS{% endblock %}
+
+{% block content %}
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+</div>
+
+<div class="form-card form-card--narrow lock-card">
+  <span class="lock-card__icon">{% icon "lock" 30 %}</span>
+  {% if is_change %}
+    <h1 class="lock-card__title">Cambiar contraseña de Finanzas</h1>
+    <p class="lock-card__text">Si olvidaste la actual, escribe la contraseña con la que entras a CRIS.</p>
+  {% else %}
+    <h1 class="lock-card__title">Protege tu módulo de Finanzas</h1>
+    <p class="lock-card__text">Crea una contraseña fija. Se pedirá cada vez que entres a Finanzas.</p>
+  {% endif %}
+
+  <form method="post" novalidate class="form-grid form-grid--single">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% for field in form %}
+      <div class="field full">
+        <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>
+        {{ field }}
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <div class="form-actions full">
+      <a href="{% url 'core:dashboard' %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">{% icon "check" 18 %} Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

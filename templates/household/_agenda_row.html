@@ -1,0 +1,25 @@
+{% load icons money household %}
+<li class="ag ag--{{ e.state }}">
+  <span class="ag__icon">{% icon e.icon 20 %}</span>
+  <div class="ag__body">
+    <div class="ag__title">{{ e.title }}</div>
+    <div class="ag__meta">
+      <span class="ag__when">{{ e.date|date:"D d M" }} · {{ e.date|days_until }}</span>
+      {% if e.subtitle %}<span>{{ e.subtitle }}</span>{% endif %}
+    </div>
+  </div>
+  {% if e.amount %}<span class="ag__amount">{{ e.amount|money }}</span>{% endif %}
+  <div class="ag__actions">
+    {% if e.action %}
+      {% if e.action.drawer %}
+        <a href="{{ e.action.url }}" class="btn-ghost" data-drawer>{{ e.action.label }}</a>
+      {% else %}
+        <form method="post" action="{{ e.action.url }}" class="js-quick">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost">{% icon "check" 16 %} {{ e.action.label }}</button>
+        </form>
+      {% endif %}
+    {% endif %}
+    {% if e.edit %}<a href="{{ e.edit }}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 16 %}</a>{% endif %}
+  </div>
+</li>

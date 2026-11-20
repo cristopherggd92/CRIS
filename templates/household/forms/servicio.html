@@ -1,0 +1,34 @@
+{% load icons %}
+<form method="post" action="{{ request.get_full_path }}" class="hf js-hform" data-kind="servicio" novalidate
+      data-providers='{"luz":["CFE"],"agua":["SACMEX","SIAPA","Agua y Drenaje de Monterrey","CEA"],"gas":["Naturgy","Gas LP","Engie"],"internet":["Telmex","Izzi","Totalplay","Megacable","Starlink"],"telefono":["Telcel","AT&T","Movistar","Bait"],"renta":["Banco","Arrendador"],"predial":["Tesorería municipal"],"streaming":["Netflix","Spotify","Disney+","Max","Prime Video","YouTube Premium"]}'>
+  {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  {% include "household/forms/_head.html" with icon="receipt" title="Nuevo servicio" subtitle="Luz, agua, internet… y cada cuánto se paga" %}
+  <div class="hf__body">
+    <section class="hf-step">
+      <h3><span>1</span> ¿Qué servicio es?</h3>
+      {% include "household/forms/_tiles.html" with f=form.kind group="service" autofill="#id_name" %}
+    </section>
+    <section class="hf-step">
+      <h3><span>2</span> Datos</h3>
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.name extra="span-2" %}
+        {% include "household/forms/_field.html" with f=form.provider %}
+        {% include "household/forms/_field.html" with f=form.account_number %}
+        <datalist id="providers"></datalist>
+      </div>
+    </section>
+    <section class="hf-step">
+      <h3><span>3</span> Pagos</h3>
+      {% include "household/forms/_seg.html" with f=form.frequency %}
+      <div class="hf-grid">
+        {% include "household/forms/_field.html" with f=form.next_due %}
+        {% include "household/forms/_field.html" with f=form.usual_amount help="Se usa para pagar en un clic" %}
+      </div>
+      <div class="hf-preview js-preview-service" hidden>
+        {% icon "calendar" 18 %} <span>Próximos pagos: <strong class="js-preview-text"></strong></span>
+      </div>
+      <label class="hf-switch">{{ form.is_active }} <span class="hf-switch__track"></span> Servicio activo</label>
+    </section>
+  </div>
+  {% include "household/forms/_foot.html" %}
+</form>

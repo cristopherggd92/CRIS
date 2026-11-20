@@ -4,9 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}CRIS{% endblock %}</title>
+  <script>
+    // Aplica el tema antes de pintar la página para evitar un "parpadeo" blanco
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("cris-theme"); } catch (e) {}
+      if (!theme) {
+        theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link href="{% static 'css/cris.css' %}" rel="stylesheet">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   {% block body %}{% endblock %}
+  <script src="{% static 'js/theme.js' %}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

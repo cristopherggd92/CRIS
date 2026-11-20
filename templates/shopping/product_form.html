@@ -1,0 +1,35 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Editar producto · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" with current="Editar producto" %}
+
+<div class="form-card form-card--narrow">
+  <div class="page-head__title mb">
+    <span class="page-head__icon">{% icon "tag" 24 %}</span>
+    <div>
+      <h1>Editar producto</h1>
+      <p>Comprado {{ object.times_bought }} ve{{ object.times_bought|pluralize:"z,ces" }}</p>
+    </div>
+  </div>
+  <form method="post" novalidate class="form-grid form-grid--single">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field full">
+        {% if field.field.widget.input_type == "checkbox" %}
+          <label class="check">{{ field }} <span>Marcar como favorito (siempre lo compro)</span></label>
+        {% else %}
+          <label for="{{ field.id_for_label }}" class="field-label">{{ field.label|capfirst }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+        {% endif %}
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <div class="form-actions full">
+      <a href="{% url 'shopping:products' %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% load icons %}
+<div class="quick-actions">
+  <a href="{% url 'finance:transaction_create' %}?tipo=gasto" class="btn-primary">{% icon "arrow_down" 16 %} Gasto</a>
+  <a href="{% url 'finance:transaction_create' %}?tipo=ingreso" class="btn-secondary">{% icon "arrow_up" 16 %} Ingreso</a>
+  <a href="{% url 'finance:transaction_create' %}?tipo=transferencia" class="btn-secondary">{% icon "swap" 16 %} Transferir</a>
+</div>

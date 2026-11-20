@@ -1,0 +1,11 @@
+{% load icons household %}
+<div class="hf-tiles {{ extra }}" role="radiogroup" aria-label="{{ f.label }}" {% if autofill %}data-autofill="{{ autofill }}"{% endif %}>
+  {% for opt in f %}
+    <label class="hf-tile" for="{{ opt.id_for_label }}">
+      {{ opt.tag }}
+      <span class="hf-tile__icon">{% icon opt.data.value|choice_icon:group 22 %}</span>
+      <span class="hf-tile__label">{{ opt.choice_label }}</span>
+    </label>
+  {% endfor %}
+</div>
+{% for e in f.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}

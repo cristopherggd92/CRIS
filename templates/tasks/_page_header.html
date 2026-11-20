@@ -1,10 +1,4 @@
 {% load icons %}
-<nav class="breadcrumb" aria-label="Ruta">
-  <a href="{% url 'core:dashboard' %}">{% icon "home" 16 %} Inicio</a>
-  <span>/</span>
-  {% if current %}
-    <a href="{% url 'tasks:list' %}">Tareas</a><span>/</span><span>{{ current }}</span>
-  {% else %}
-    <span>Tareas</span>
-  {% endif %}
-</nav>
+<div class="page-top">
+  <a href="{% url 'core:dashboard' %}" class="btn-back">{% icon "back" 18 %} Volver al inicio</a>
+</div>

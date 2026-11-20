@@ -4,6 +4,7 @@
 {% block body_class %}login-page{% endblock %}
 
 {% block body %}
+{% include "_theme_toggle.html" with extra_class="theme-toggle--floating" %}
 <main class="login-wrapper">
   <div class="login-card">
     <div class="login-avatar">{% icon "user" 44 %}</div>

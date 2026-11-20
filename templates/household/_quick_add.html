@@ -1,0 +1,12 @@
+{% load icons %}
+<details class="qa js-qa">
+  <summary class="btn-primary">{% icon "plus" 18 %} Agregar</summary>
+  <div class="qa__menu">
+    <a href="{% url 'household:form_new' 'recibo' %}" data-drawer>{% icon "receipt" 18 %} Recibo</a>
+    <a href="{% url 'household:form_new' 'servicio' %}" data-drawer>{% icon "bolt" 18 %} Servicio</a>
+    <a href="{% url 'household:form_new' 'mantenimiento' %}" data-drawer>{% icon "wrench" 18 %} Mantenimiento</a>
+    <a href="{% url 'household:form_new' 'recordatorio' %}" data-drawer>{% icon "bell" 18 %} Recordatorio</a>
+    <a href="{% url 'household:form_new' 'vehiculo' %}" data-drawer>{% icon "car" 18 %} Vehículo</a>
+    <a href="{% url 'household:form_new' 'articulo' %}" data-drawer>{% icon "box" 18 %} Artículo</a>
+  </div>
+</details>

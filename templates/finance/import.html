@@ -1,0 +1,134 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Importar · CRIS{% endblock %}
+
+{% block content %}
+{% include "finance/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "upload" 26 %}</span>
+    <div>
+      <h1>Importar desde CSV</h1>
+      <p>Sube el CSV exportado. Verás una vista previa antes de guardar nada.</p>
+    </div>
+  </div>
+</div>
+
+{% if not preview %}
+  <div class="form-card form-card--narrow">
+    <form method="post" enctype="multipart/form-data" novalidate class="form-grid form-grid--single">
+      {% csrf_token %}
+      <div class="field full">
+        <label for="{{ form.file.id_for_label }}" class="field-label">{{ form.file.label }}</label>
+        <label class="dropzone">
+          {% icon "upload" 32 %}
+          <span class="dropzone__text">Elige tu archivo <strong>.csv</strong></span>
+          <span class="dropzone__name js-file-name">Ningún archivo seleccionado</span>
+          {{ form.file }}
+        </label>
+        <div class="field-help">{{ form.file.help_text }}</div>
+        {% for e in form.file.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-actions full">
+        <button type="submit" class="btn-primary">{% icon "search" 16 %} Ver vista previa</button>
+      </div>
+    </form>
+    <div class="import-help">
+      <h2>¿Qué hace el importador?</h2>
+      <ul>
+        <li>Une en una sola <strong>transferencia</strong></li>
+        <li>“Pago” y montos negativos se registran como <strong>gasto</strong>; positivos como <strong>ingreso</strong>.</li>
+        <li>Crea las <strong>cuentas y categorías</strong> que todavía no existan.</li>
+        <li>Si vuelves a subir el mismo archivo, <strong>no duplica</strong> movimientos.</li>
+      </ul>
+    </div>
+  </div>
+{% else %}
+  <section class="kpi-grid">
+    <div class="kpi"><span class="kpi__label">{% icon "list" 16 %} Por importar</span><span class="kpi__value">{{ preview.to_import }}</span><span class="kpi__hint">{{ filename }}</span></div>
+    <div class="kpi kpi--out"><span class="kpi__label">{% icon "arrow_down" 16 %} Gastos</span><span class="kpi__value">{{ preview.counts.gasto|default:0 }}</span></div>
+    <div class="kpi kpi--in"><span class="kpi__label">{% icon "arrow_up" 16 %} Ingresos</span><span class="kpi__value">{{ preview.counts.ingreso|default:0 }}</span></div>
+    <div class="kpi"><span class="kpi__label">{% icon "swap" 16 %} Transferencias</span><span class="kpi__value">{{ preview.counts.transferencia|default:0 }}</span></div>
+    <div class="kpi"><span class="kpi__label">{% icon "repeat" 16 %} Duplicados</span><span class="kpi__value">{{ preview.counts.duplicados|default:0 }}</span><span class="kpi__hint">Ya estaban importados</span></div>
+  </section>
+
+  <form method="post">
+    {% csrf_token %}
+    <section class="panel-grid">
+      <article class="panel">
+        <header class="panel__head"><h2>Cuentas nuevas</h2><span class="meta-muted">{{ preview.new_accounts|length }}</span></header>
+        {% if preview.new_accounts %}
+          <div class="chip-row">{% for a in preview.new_accounts %}<span class="chip">{% icon "wallet" 12 %} {{ a }}</span>{% endfor %}</div>
+          <p class="field-help">Después de importar, edita cada cuenta y escribe su <strong>saldo actual</strong> para que cuadre con NEKO.</p>
+        {% else %}<p class="panel__empty">Todas las cuentas ya existen.</p>{% endif %}
+      </article>
+      <article class="panel">
+        <header class="panel__head"><h2>Categorías nuevas</h2><span class="meta-muted">{{ preview.new_categories|length }}</span></header>
+        {% if preview.new_categories %}
+          <div class="chip-row">{% for c in preview.new_categories %}<span class="chip">{% icon "tag" 12 %} {{ c }}</span>{% endfor %}</div>
+        {% else %}<p class="panel__empty">Todas las categorías ya existen.</p>{% endif %}
+      </article>
+    </section>
+
+    {% if preview.recurring_candidates %}
+      <article class="panel mb-1">
+        <header class="panel__head">
+          <h2>¿Convertir pagos en recurrentes?</h2>
+          <span class="meta-muted">Mensuales, a partir del próximo mes</span>
+        </header>
+        <div class="check-grid">
+          {% for r in preview.recurring_candidates %}
+            <label class="check check--card">
+              <input type="checkbox" name="recurring" value="{{ r.ref }}">
+              <span><strong>{{ r.description }}</strong><small>{{ r.amount|money }} · {{ r.account }}{% if r.category %} · {{ r.category }}{% endif %}</small></span>
+            </label>
+          {% endfor %}
+        </div>
+      </article>
+    {% endif %}
+
+    {% if errors %}
+      <div class="alert-error">{% for e in errors %}<div>{{ e }}</div>{% endfor %}</div>
+    {% endif %}
+
+    <article class="panel mb-1">
+      <header class="panel__head"><h2>Vista previa</h2><span class="meta-muted">{{ rows|length }} movimientos</span></header>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Cuenta</th><th>Categoría</th><th class="num">Monto</th></tr></thead>
+          <tbody>
+            {% for r in rows %}
+              <tr class="{% if r.duplicate %}is-dup{% endif %} {% if r.warning %}is-warn{% endif %}">
+                <td>{{ r.date }}</td>
+                <td><span class="kind kind--{{ r.kind }}">{% if r.kind == "transferencia" %}Transferencia{% elif r.kind == "ingreso" %}Ingreso{% elif r.is_payment %}Pago{% else %}Gasto{% endif %}</span></td>
+                <td>{{ r.description }}{% if r.duplicate %} <span class="pill">Duplicado</span>{% endif %}{% if r.warning %}<div class="field-error">{{ r.warning }}</div>{% endif %}</td>
+                <td>{{ r.account }}{% if r.to_account %} → {{ r.to_account }}{% endif %}</td>
+                <td>{{ r.category|default:"—" }}</td>
+                <td class="num tx--{{ r.kind }}"><span class="tx__amount">{% if r.kind == "gasto" %}−{% elif r.kind == "ingreso" %}+{% endif %}{{ r.amount|money }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <div class="form-actions">
+      <button type="submit" name="action" value="cancel" class="btn-secondary">Cancelar</button>
+      <button type="submit" name="action" value="confirm" class="btn-primary" {% if not preview.to_import and not preview.recurring_candidates %}disabled{% endif %}>
+        {% icon "check" 16 %} Importar {{ preview.to_import }} movimientos
+      </button>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Muestra el nombre del archivo elegido
+  document.querySelector(".dropzone input")?.addEventListener("change", (e) => {
+    const name = e.target.files[0]?.name || "Ningún archivo seleccionado";
+    document.querySelector(".js-file-name").textContent = name;
+  });
+</script>
+{% endblock %}

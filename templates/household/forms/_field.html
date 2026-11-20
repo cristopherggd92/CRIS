@@ -1,0 +1,6 @@
+<div class="hf-field {{ extra }}">
+  <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}{% if f.field.required %} <b>*</b>{% endif %}</label>
+  {{ f }}
+  {% if help %}<small class="hf-help">{{ help }}</small>{% endif %}
+  {% for e in f.errors %}<small class="hf-error">{{ e }}</small>{% endfor %}
+</div>

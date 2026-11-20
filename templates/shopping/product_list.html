@@ -1,0 +1,90 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Productos · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "tag" 26 %}</span>
+    <div>
+      <h1>Mis productos</h1>
+      <p>Se llena solo con lo que agregas a tus listas · {{ page_obj.paginator.count }} producto{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+  </div>
+</div>
+
+<form method="get" class="filters" id="filters">
+  <div class="input-icon filters__search">
+    {% icon "search" 18 "input-icon__icon" %}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Buscar producto…">
+  </div>
+  <select name="pasillo" class="select" aria-label="Pasillo">
+    <option value="">Todo pasillo</option>
+    {% for value, label in aisles %}
+      <option value="{{ value }}" {% if filters.pasillo == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <label class="check"><input type="checkbox" name="favoritos" value="1" {% if only_favs %}checked{% endif %}> <span>Solo favoritos</span></label>
+  {% if filters.q or filters.pasillo or only_favs %}<a href="?" class="btn-link">Limpiar</a>{% endif %}
+</form>
+
+{% if products %}
+  <ul class="tx-list">
+    {% for p in products %}
+      <li class="tx product-row">
+        <form method="post" action="{% url 'shopping:product_favorite' p.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="fav-btn {% if p.is_favorite %}is-on{% endif %}" aria-pressed="{% if p.is_favorite %}true{% else %}false{% endif %}"
+                  aria-label="{% if p.is_favorite %}Quitar de favoritos{% else %}Marcar como favorito{% endif %}">{% icon "star" 18 %}</button>
+        </form>
+        <div class="tx__body">
+          <div class="tx__title">{{ p.name }}</div>
+          <div class="tx__meta">
+            <span class="tx__cat"><span class="dot dot--{{ p.aisle_color }}"></span>{{ p.get_aisle_display }}</span>
+            · {{ p.get_unit_display }}
+            {% if p.times_bought %}· {{ p.times_bought }} compra{{ p.times_bought|pluralize }}{% endif %}
+            {% if p.last_bought_at %}· {{ p.last_bought_at|date:"d M" }}{% endif %}
+            {% if p.last_store %}· {{ p.last_store }}{% endif %}
+          </div>
+        </div>
+        <div class="product-row__price">
+          <span class="tx__amount">{% if p.last_price is not None %}{{ p.last_price|money }}{% else %}—{% endif %}</span>
+          {% if p.price_trend %}
+            <span class="trend trend--{{ p.price_trend }}" title="Antes {{ p.prev_price|money }}">
+              {% if p.price_trend == "up" %}{% icon "arrow_up" 12 %}{% else %}{% icon "arrow_down" 12 %}{% endif %}{{ p.price_change_pct }}%
+            </span>
+          {% endif %}
+        </div>
+        <div class="tx__actions">
+          <a href="{% url 'shopping:product_update' p.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 16 %}</a>
+          <a href="{% url 'shopping:product_delete' p.pk %}" class="icon-btn icon-btn--danger" aria-label="Eliminar">{% icon "trash" 16 %}</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+  {% if is_paginated %}
+    <nav class="pager">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-link">← Anterior</a>{% endif %}
+      <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-link">Siguiente →</a>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "tag" 40 %}</span>
+    <h2>Sin productos</h2>
+    <p>Cuando agregues artículos a una lista aparecerán aquí con su último precio.</p>
+    <a href="{% url 'shopping:home' %}" class="btn-primary">{% icon "cart" 18 %} Ir a mis listas</a>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const f = document.getElementById("filters");
+  f?.querySelectorAll("select, input[type=checkbox]").forEach((el) => el.addEventListener("change", () => f.submit()));
+</script>
+{% endblock %}

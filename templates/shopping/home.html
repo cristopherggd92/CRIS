@@ -1,0 +1,98 @@
+{% extends "layouts/app.html" %}
+{% load icons money %}
+{% block title %}Compras · CRIS{% endblock %}
+
+{% block content %}
+{% include "shopping/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "cart" 26 %}</span>
+    <div>
+      <h1>Listas de compras</h1>
+      <p>Organiza el súper por pasillo y cuida tu presupuesto</p>
+    </div>
+  </div>
+  <a href="{% url 'shopping:create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva lista</a>
+</div>
+
+<section class="kpi-grid">
+  <div class="kpi">
+    <span class="kpi__label">{% icon "list" 16 %} Listas activas</span>
+    <span class="kpi__value">{{ active_lists|length }}</span>
+    <span class="kpi__hint">{{ pending_items }} artículo{{ pending_items|pluralize }} por comprar</span>
+  </div>
+  <div class="kpi kpi--out">
+    <span class="kpi__label">{% icon "cart" 16 %} Gastado este mes</span>
+    <span class="kpi__value">{{ month_total|money }}</span>
+    <span class="kpi__hint">En {{ month_count }} compra{{ month_count|pluralize }}</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "chart" 16 %} Ticket promedio</span>
+    <span class="kpi__value">{% if avg_ticket %}{{ avg_ticket|money }}{% else %}—{% endif %}</span>
+    <span class="kpi__hint">Del mes en curso</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi__label">{% icon "star" 16 %} Favoritos</span>
+    <span class="kpi__value">{{ favorites }}</span>
+    <span class="kpi__hint"><a href="{% url 'shopping:products' %}?favoritos=1" class="btn-link">Ver productos</a></span>
+  </div>
+</section>
+
+{% if active_lists %}
+  <section class="shop-grid">
+    {% for sl in active_lists %}
+      <a href="{% url 'shopping:detail' sl.pk %}" class="shop-card {% if sl.summary.over_budget %}is-over{% endif %}">
+        <div class="shop-card__top">
+          <span class="shop-card__name" title="{{ sl.name }}">{{ sl.name }}</span>
+          <span class="pill">{{ sl.summary.checked }}/{{ sl.summary.count }}</span>
+        </div>
+        <div class="shop-card__meta">
+          {% if sl.store %}<span class="meta-muted">{% icon "store" 14 %} {{ sl.store }}</span>{% endif %}
+          {% if sl.planned_date %}<span class="meta-muted">{% icon "calendar" 14 %} {{ sl.planned_date|date:"D d M" }}</span>{% endif %}
+        </div>
+        <div class="progress" aria-label="Avance {{ sl.summary.progress }}%">
+          <span style="width: {{ sl.summary.progress }}%"></span>
+        </div>
+        <div class="shop-card__totals">
+          <span>Estimado <strong>{{ sl.summary.estimated|money }}</strong></span>
+          {% if sl.budget is not None %}
+            <span class="{% if sl.summary.over_budget %}is-neg{% else %}meta-muted{% endif %}">
+              {% if sl.summary.over_budget %}Excede por {{ sl.summary.budget_left|money }}{% else %}Quedan {{ sl.summary.budget_left|money }}{% endif %}
+            </span>
+          {% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </section>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "cart" 40 %}</span>
+    <h2>No tienes listas activas</h2>
+    <p>Crea tu lista del súper y márcala mientras compras.</p>
+    <a href="{% url 'shopping:create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva lista</a>
+  </div>
+{% endif %}
+
+{% if history %}
+  <article class="panel shop-history">
+    <header class="panel__head"><h2>Compras recientes</h2><span class="meta-muted">Últimas {{ history|length }}</span></header>
+    <ul class="mini-list">
+      {% for sl in history %}
+        <li>
+          <span class="acc-icon acc-icon--amber">{% icon "check" 18 %}</span>
+          <a href="{% url 'shopping:detail' sl.pk %}" class="mini-list__name">
+            {{ sl.name }}
+            <small>{{ sl.completed_at|date:"d M Y" }}{% if sl.store %} · {{ sl.store }}{% endif %} · {{ sl.n_items }} artículo{{ sl.n_items|pluralize }}</small>
+          </a>
+          <span class="mini-list__amount">{{ sl.total_paid|money }}</span>
+          <form method="post" action="{% url 'shopping:duplicate' sl.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn" title="Repetir lista" aria-label="Repetir lista">{% icon "copy" 18 %}</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  </article>
+{% endif %}
+{% endblock %}

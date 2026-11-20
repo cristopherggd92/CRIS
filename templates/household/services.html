@@ -1,0 +1,103 @@
+{% extends "household/_base.html" %}
+{% load icons money household %}
+{% block title %}Servicios · CRIS{% endblock %}
+
+{% block content %}
+{% include "household/_nav.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "receipt" 26 %}</span>
+    <div>
+      <h1>Servicios y recibos</h1>
+      <p>Aprox. {{ monthly|money }} al mes · {{ paid_year|money }} pagado este año</p>
+    </div>
+  </div>
+  <div class="quick-actions">
+    <a href="{% url 'household:form_new' 'recibo' %}" class="btn-secondary" data-drawer>{% icon "receipt" 18 %} Recibo</a>
+    <a href="{% url 'household:form_new' 'servicio' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Servicio</a>
+  </div>
+</div>
+
+{% if services %}
+  <section class="svc-grid">
+    {% for s in services %}
+      <article class="svc svc--{{ s.due_state }} {% if not s.is_active %}is-off{% endif %}">
+        <div class="svc__top">
+          <span class="svc__icon svc__icon--{{ s.kind }}">{% icon s.icon 22 %}</span>
+          <div class="svc__name">
+            <strong>{{ s.name }}</strong>
+            <small>{{ s.provider|default:s.get_kind_display }}{% if s.account_number %} · {{ s.account_number }}{% endif %}</small>
+          </div>
+          <a href="{% url 'household:form_edit' 'servicio' s.pk %}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 16 %}</a>
+        </div>
+        <div class="svc__due">
+          <span class="badge-state badge-state--{{ s.due_state }}">{{ s.due_state|state_label }}</span>
+          <span>{{ s.next_due|date:"d M Y" }} · {{ s.next_due|days_until }}</span>
+        </div>
+        <div class="svc__foot">
+          <span class="svc__amount">{% if s.usual_amount %}{{ s.usual_amount|money }}{% else %}—{% endif %} <small>{{ s.get_frequency_display|lower }}</small></span>
+          {% if s.is_active %}
+            {% if s.unpaid %}
+              <span class="pill">{{ s.unpaid }} recibo{{ s.unpaid|pluralize }} por pagar</span>
+            {% else %}
+              <details class="pay-pop">
+                <summary class="btn-ghost">{% icon "check" 16 %} Pagar</summary>
+                <form method="post" action="{% url 'household:service_pay' s.pk %}" class="pay-pop__panel js-quick">
+                  {% csrf_token %}
+                  <label>Monto pagado</label>
+                  <div class="hf-amount__wrap"><span>$</span><input type="number" name="amount" step="0.01" min="0" value="{{ s.usual_amount|default_if_none:''|stringformat:'s' }}" inputmode="decimal" required></div>
+                  <button type="submit" class="btn-primary btn-block">Confirmar pago</button>
+                </form>
+              </details>
+            {% endif %}
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "bolt" 40 %}</span>
+    <h2>Registra tus servicios</h2>
+    <p>Luz, agua, gas, internet, renta… CRIS te avisará antes de cada fecha límite.</p>
+    <a href="{% url 'household:form_new' 'servicio' %}" class="btn-primary" data-drawer>{% icon "plus" 18 %} Agregar servicio</a>
+  </div>
+{% endif %}
+
+{% if bills %}
+  <article class="panel mt-lg">
+    <header class="panel__head">
+      <h2>Recibos</h2>
+      <div class="hf-chips js-filter" data-target="#bill-list">
+        <button type="button" class="hf-chip is-on" data-filter="">Todos</button>
+        <button type="button" class="hf-chip" data-filter="pendiente">Pendientes</button>
+        <button type="button" class="hf-chip" data-filter="pagado">Pagados</button>
+      </div>
+    </header>
+    <ul class="ag-list" id="bill-list">
+      {% for b in bills %}
+        <li class="ag ag--{{ b.due_state|default:'paid' }}" data-tags="{% if b.is_paid %}pagado{% else %}pendiente{% endif %}">
+          <span class="ag__icon">{% icon b.service.icon 20 %}</span>
+          <div class="ag__body">
+            <div class="ag__title">{{ b.service.name }}{% if b.period %} · {{ b.period }}{% endif %}</div>
+            <div class="ag__meta">
+              {% if b.is_paid %}<span>Pagado el {{ b.paid_at|date:"d M Y" }}</span>{% else %}<span class="ag__when">Vence {{ b.due_date|date:"d M" }} · {{ b.due_date|days_until }}</span>{% endif %}
+              {% if b.reference %}<span>{{ b.reference }}</span>{% endif %}
+            </div>
+          </div>
+          <span class="ag__amount">{{ b.amount|money }}</span>
+          <div class="ag__actions">
+            {% if not b.is_paid %}
+              <form method="post" action="{% url 'household:bill_pay' b.pk %}" class="js-quick">{% csrf_token %}<button type="submit" class="btn-ghost">{% icon "check" 16 %} Pagar</button></form>
+            {% else %}
+              <span class="badge-state badge-state--paid">{% icon "check" 14 %} Pagado</span>
+            {% endif %}
+            <a href="{% url 'household:form_edit' 'recibo' b.pk %}" class="icon-btn" data-drawer aria-label="Editar">{% icon "edit" 16 %}</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </article>
+{% endif %}
+{% endblock %}
