@@ -1,0 +1,29 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Inicio · CRIS{% endblock %}
+
+{% block content %}
+<section class="greeting">
+  <h1>Hola, {{ user.first_name|default:user.username }} 👋</h1>
+  <p>¿Qué quieres organizar hoy?</p>
+</section>
+
+<section class="module-grid">
+  {% for module in modules %}
+    {% if module.url_name %}
+      <a href="{% url module.url_name %}" class="module-card module-card--{{ module.color }}"
+         data-module="{{ module.key }}">
+    {% else %}
+      <button type="button" class="module-card module-card--{{ module.color }}"
+              data-module="{{ module.key }}">
+    {% endif %}
+      <span class="module-card__icon">{% icon module.icon 28 %}</span>
+      <span class="module-card__name">{{ module.name }}</span>
+      <span class="module-card__desc">{{ module.description }}</span>
+      {% if not module.url_name %}
+        <span class="module-card__badge">Próximamente</span>
+      {% endif %}
+    {% if module.url_name %}</a>{% else %}</button>{% endif %}
+  {% endfor %}
+</section>
+{% endblock %}

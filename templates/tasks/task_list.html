@@ -1,0 +1,139 @@
+{% extends "layouts/app.html" %}
+{% load icons %}
+{% block title %}Tareas · CRIS{% endblock %}
+
+{% block content %}
+{% include "tasks/_page_header.html" %}
+
+<div class="page-head">
+  <div class="page-head__title">
+    <span class="page-head__icon">{% icon "check" 26 %}</span>
+    <div>
+      <h1>Mis tareas</h1>
+      <p>{{ counts.total }} en total · {{ counts.completada }} completadas</p>
+    </div>
+  </div>
+  <a href="{% url 'tasks:create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva tarea</a>
+</div>
+
+{# Contadores: también funcionan como filtro rápido por estatus #}
+<div class="stat-row">
+  <a href="?" class="stat {% if not filters.status %}is-active{% endif %}">
+    <span class="stat__num">{{ counts.total }}</span><span class="stat__label">Todas</span>
+  </a>
+  <a href="?status=pendiente" class="stat stat--pendiente {% if filters.status == 'pendiente' %}is-active{% endif %}">
+    <span class="stat__num">{{ counts.pendiente }}</span><span class="stat__label">Pendientes</span>
+  </a>
+  <a href="?status=en_progreso" class="stat stat--en_progreso {% if filters.status == 'en_progreso' %}is-active{% endif %}">
+    <span class="stat__num">{{ counts.en_progreso }}</span><span class="stat__label">En progreso</span>
+  </a>
+  <a href="?status=completada" class="stat stat--completada {% if filters.status == 'completada' %}is-active{% endif %}">
+    <span class="stat__num">{{ counts.completada }}</span><span class="stat__label">Completadas</span>
+  </a>
+  <a href="?status=vencidas" class="stat stat--vencidas {% if filters.status == 'vencidas' %}is-active{% endif %}">
+    <span class="stat__num">{{ counts.vencidas }}</span><span class="stat__label">Vencidas</span>
+  </a>
+</div>
+
+<form method="get" class="filters" id="filters">
+  {% if filters.status %}<input type="hidden" name="status" value="{{ filters.status }}">{% endif %}
+  <div class="input-icon filters__search">
+    {% icon "search" 18 "input-icon__icon" %}
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Buscar tarea…">
+  </div>
+  <select name="priority" class="select" aria-label="Prioridad">
+    <option value="">Toda prioridad</option>
+    {% for value, label in priority_choices %}
+      <option value="{{ value }}" {% if filters.priority == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="tag" class="select" aria-label="Etiqueta">
+    <option value="">Toda etiqueta</option>
+    {% for tag in user_tags %}
+      <option value="{{ tag.name }}" {% if filters.tag == tag.name %}selected{% endif %}>#{{ tag.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="sort" class="select" aria-label="Ordenar">
+    <option value="">Orden sugerido</option>
+    {% for value, label in sort_options %}
+      <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  {% if has_filters %}<a href="?" class="btn-link">Limpiar</a>{% endif %}
+</form>
+
+{% if tasks %}
+  <ul class="task-list">
+    {% for task in tasks %}
+      <li class="task task--{{ task.status }} task--p{{ task.priority }}" data-task="{{ task.pk }}">
+        <form method="post" action="{% url 'tasks:set_status' task.pk %}" class="task__check-form">
+          {% csrf_token %}
+          <input type="hidden" name="status" value="{% if task.status == 'completada' %}pendiente{% else %}completada{% endif %}">
+          <button type="submit" class="task__check js-toggle"
+                  aria-label="{% if task.status == 'completada' %}Marcar como pendiente{% else %}Marcar como completada{% endif %}">
+            {% icon "check" 22 %}
+          </button>
+        </form>
+
+        <div class="task__body">
+          <div class="task__title">{{ task.title }}</div>
+          {% if task.description %}<div class="task__desc">{{ task.description|truncatechars:140 }}</div>{% endif %}
+          <div class="task__meta">
+            <span class="badge-priority badge-priority--{{ task.priority }}">{% icon "flag" 14 %} {{ task.get_priority_display }}</span>
+            {% if task.due_date %}
+              <span class="due js-due {% if task.due_state %}due--{{ task.due_state }}{% endif %}" title="Fecha de vencimiento">
+                {% icon "clock" 14 %} {{ task.due_date|date:"d M Y" }}
+                {% if task.due_state == "overdue" %}· Vencida{% elif task.due_state == "today" %}· Hoy{% endif %}
+              </span>
+            {% endif %}
+            <span class="meta-muted" title="Fecha de registro">{% icon "calendar" 14 %} {{ task.created_at|date:"d M Y" }}</span>
+            {% for tag in task.tags.all %}
+              <a href="?tag={{ tag.name|urlencode }}" class="chip chip--{{ tag.color }}">{% icon "tag" 12 %} {{ tag.name }}</a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="task__actions">
+          <form method="post" action="{% url 'tasks:set_status' task.pk %}">
+            {% csrf_token %}
+            <select name="status" class="select select--sm status-select status-select--{{ task.status }} js-status" aria-label="Estatus">
+              {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <noscript><button type="submit" class="btn-link">Guardar</button></noscript>
+          </form>
+          <a href="{% url 'tasks:update' task.pk %}" class="icon-btn" aria-label="Editar">{% icon "edit" 18 %}</a>
+          <a href="{% url 'tasks:delete' task.pk %}" class="icon-btn icon-btn--danger" aria-label="Eliminar">{% icon "trash" 18 %}</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if is_paginated %}
+    <nav class="pager">
+      {% if page_obj.has_previous %}<a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}" class="btn-link">← Anterior</a>{% endif %}
+      <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?{{ querystring }}&page={{ page_obj.next_page_number }}" class="btn-link">Siguiente →</a>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="empty">
+    <span class="empty__icon">{% icon "inbox" 40 %}</span>
+    {% if has_filters %}
+      <h2>Sin resultados</h2>
+      <p>Ninguna tarea coincide con los filtros.</p>
+      <a href="?" class="btn-link">Ver todas</a>
+    {% else %}
+      <h2>Aún no tienes tareas</h2>
+      <p>Crea la primera para empezar a organizarte.</p>
+      <a href="{% url 'tasks:create' %}" class="btn-primary">{% icon "plus" 18 %} Nueva tarea</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% load static %}
+<script src="{% static 'js/tasks.js' %}"></script>
+{% endblock %}

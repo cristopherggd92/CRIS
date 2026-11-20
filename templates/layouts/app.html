@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load icons %}
+{% block body_class %}app-page{% endblock %}
+
+{% block body %}
+<header class="app-navbar">
+  <div class="app-container app-navbar__inner">
+    <a class="app-brand" href="{% url 'core:dashboard' %}">CRIS</a>
+    <div class="app-navbar__right">
+      <span class="app-user">
+        <span class="app-user__avatar">{% icon "user" 18 %}</span>
+        <span class="app-user__name">{{ user }}</span>
+      </span>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">{% icon "logout" 16 %} <span>Salir</span></button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<main class="app-container app-main">
+  {% if messages %}
+    <div class="toasts" id="toasts">
+      {% for message in messages %}
+        <div class="toast toast--{{ message.tags }}" role="status">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<script>
+  // Oculta los avisos después de unos segundos
+  setTimeout(() => document.getElementById("toasts")?.remove(), 3500);
+</script>
+{% block scripts %}{% endblock %}
+{% endblock %}
