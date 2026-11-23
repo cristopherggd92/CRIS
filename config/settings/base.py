@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -8,7 +9,20 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 DEBUG = False
-ALLOWED_HOSTS = [h for h in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if h]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
+
+# En Vercel se agregan solos los dominios del despliegue (variables de sistema de Vercel).
+for _var in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+    _host = os.getenv(_var)
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+
+# Orígenes de confianza para formularios (CSRF) cuando se sirve por HTTPS.
+_LOCAL_HOSTS = ("localhost", "127.0.0.1")
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h not in _LOCAL_HOSTS]
+CSRF_TRUSTED_ORIGINS += [
+    o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -55,11 +69,15 @@ TEMPLATES = [
     },
 ]
 
+# Con DATABASE_URL (Postgres en producción) se usa esa base; sin ella, SQLite local.
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=60,
+        conn_health_checks=True,
+        # Neon usa un pooler (PgBouncer) en modo transacción.
+        disable_server_side_cursors=True,
+    )
 }
 
 # Usuario personalizado: debe existir ANTES de la primera migración

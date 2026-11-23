@@ -2,6 +2,28 @@
 name = "cris"
 version = "0.1.0"
 requires-python = ">=3.12"
+# Vercel instala las dependencias desde aquí (mantener igual que requirements.txt).
+dependencies = [
+    "Django>=5.2,<6.0",
+    "python-dotenv>=1.0",
+    "dj-database-url>=2.2",
+    "psycopg[binary]>=3.2",
+]
+
+# CRIS es una app, no un paquete instalable.
+[tool.uv]
+package = false
+
+[tool.setuptools]
+packages = []
+
+# Vercel: punto de entrada WSGI y script que corre en cada build
+# (migraciones + usuario administrador inicial).
+[tool.vercel]
+entrypoint = "config.wsgi:application"
+
+[tool.vercel.scripts]
+build = "python build.py"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"
