@@ -1,10 +1,38 @@
+# Entorno virtual
 .venv/
+venv/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Secretos (nunca subirlos)
 .env
+.env.local
+.env.*.local
+
+# Base de datos local
 db.sqlite3
+db.sqlite3-journal
+
+# Archivos generados por Django
 staticfiles/
+media/
+
+# Pruebas y herramientas
 .pytest_cache/
 .ruff_cache/
-.env.local
+.coverage
+htmlcov/
+
+# Vercel
 .vercel/
+
+# Editor y sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Zips de los pasos
+*.zip
