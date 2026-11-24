@@ -38,3 +38,11 @@ MODULES = [
         "url_name": "household:home",
     },
 ]
+
+
+def enabled_modules():
+    """Módulos visibles en el menú (sin los apagados en DISABLED_MODULES)."""
+    from django.conf import settings
+
+    disabled = set(getattr(settings, "DISABLED_MODULES", []))
+    return [m for m in MODULES if m["key"] not in disabled]

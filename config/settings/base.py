@@ -40,6 +40,16 @@ INSTALLED_APPS = [
     "apps.household",
 ]
 
+# Módulos apagados: no aparecen en el menú y sus URLs no existen (dan 404).
+# Sus apps siguen instaladas para conservar las tablas y los datos.
+# Para volver a activarlos, quítalos de aquí o define CRIS_DISABLED_MODULES en el .env
+# (vacío = todos activos). Valores posibles: tasks, finance, shopping, household.
+DISABLED_MODULES = [
+    m.strip()
+    for m in os.getenv("CRIS_DISABLED_MODULES", "shopping,household").split(",")
+    if m.strip()
+]
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_not_required
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 
-from .modules import MODULES
+from .modules import enabled_modules
 
 
 class DashboardView(TemplateView):
@@ -10,7 +10,7 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["modules"] = MODULES
+        context["modules"] = enabled_modules()
         return context
 
 

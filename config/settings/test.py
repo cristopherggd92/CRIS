@@ -9,3 +9,6 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",  # noqa: F405
     }
 }
+
+# Las pruebas cubren todos los módulos, aunque estén apagados en tu PC o en producción.
+DISABLED_MODULES = []
